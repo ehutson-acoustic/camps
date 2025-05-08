@@ -1,0 +1,70 @@
+package com.acoustic.camps.mapper;
+
+import com.acoustic.camps.codegen.types.TrendData;
+import com.acoustic.camps.model.TrendDataModel;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.ReportingPolicy;
+
+import java.util.List;
+
+/**
+ * MapStruct mapper for converting between model TrendData entities and generated DTO objects
+ */
+@Mapper(componentModel = "spring",
+        uses = {CommonTypeMapper.class, EmployeeMapper.class, TeamMapper.class},
+        unmappedTargetPolicy = ReportingPolicy.IGNORE)
+public interface TrendDataMapper {
+
+    /**
+     * Convert a model TrendData entity to a generated TrendData DTO
+     *
+     * @param trendData The model entity
+     * @return The generated DTO
+     */
+    @Mapping(target = "id", source = "id")
+    @Mapping(target = "employee", source = "employee", qualifiedByName = "employeeToEmployeeMinimal")
+    @Mapping(target = "team", source = "team", qualifiedByName = "teamToTeamMinimal")
+    @Mapping(target = "recordDate", source = "recordDate")
+    @Mapping(target = "category", source = "category")
+    @Mapping(target = "averageRating", source = "averageRating")
+    @Mapping(target = "monthOverMonthChange", source = "monthOverMonthChange")
+    @Mapping(target = "quarterOverQuarterChange", source = "quarterOverQuarterChange")
+    @Mapping(target = "yearOverYearChange", source = "yearOverYearChange")
+    //@Mapping(target = "createdAt", source = "createdAt")
+    TrendData toDTO(TrendDataModel trendData);
+
+    /**
+     * Convert a generated TrendData DTO to a model TrendData entity
+     *
+     * @param trendDataDTO The generated DTO
+     * @return The model entity
+     */
+    @Mapping(target = "id", source = "id")
+    @Mapping(target = "employee", source = "employee", qualifiedByName = "employeeDTOToEmployeeMinimal")
+    @Mapping(target = "team", source = "team", qualifiedByName = "teamDTOToTeamMinimal")
+    @Mapping(target = "recordDate", source = "recordDate")
+    @Mapping(target = "category", source = "category")
+    @Mapping(target = "averageRating", source = "averageRating")
+    @Mapping(target = "monthOverMonthChange", source = "monthOverMonthChange")
+    @Mapping(target = "quarterOverQuarterChange", source = "quarterOverQuarterChange")
+    @Mapping(target = "yearOverYearChange", source = "yearOverYearChange")
+    //@Mapping(target = "createdAt", source = "createdAt")
+    TrendDataModel toEntity(TrendData trendDataDTO);
+
+    /**
+     * Convert a list of model TrendData entities to a list of generated TrendData DTOs
+     *
+     * @param trendDataList List of model entities
+     * @return List of generated DTOs
+     */
+    List<TrendData> toDTOList(List<TrendDataModel> trendDataList);
+
+    /**
+     * Convert a list of generated TrendData DTOs to a list of model TrendData entities
+     *
+     * @param trendDataDTOList List of generated DTOs
+     * @return List of model entities
+     */
+    List<TrendDataModel> toEntityList(List<TrendData> trendDataDTOList);
+}

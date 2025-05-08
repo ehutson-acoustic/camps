@@ -1,0 +1,74 @@
+package com.acoustic.camps.model;
+
+import com.acoustic.camps.codegen.types.CampsCategory;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+/**
+ * Historical trends for reporting and analysis
+ */
+@Entity
+@Table(name = "trend_data")
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class TrendDataModel {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "employee_id")
+    private EmployeeModel employee;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "team_id")
+    private TeamModel team;
+
+    @Column(nullable = false)
+    private LocalDate recordDate;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private CampsCategory category;
+
+    @Column(nullable = false)
+    private Double averageRating;
+
+    @Column(name = "month_over_month_change")
+    private Double monthOverMonthChange;
+
+    @Column(name = "quarter_over_quarter_change")
+    private Double quarterOverQuarterChange;
+
+    @Column(name = "year_over_year_change")
+    private Double yearOverYearChange;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
+}

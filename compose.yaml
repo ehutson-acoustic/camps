@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: 'postgres:latest'
+    environment:
+      - 'POSTGRES_DB=camps'
+      - 'POSTGRES_PASSWORD=camps'
+      - 'POSTGRES_USER=camps'
+    ports:
+      - '5432:5432'
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  admin:
+    image: 'adminer:latest'
+    restart: unless-stopped
+    ports:
+      - '8085:8080'
+    depends_on:
+      - postgres
+volumes:
+  db_data:

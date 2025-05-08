@@ -1,0 +1,221 @@
+type Employee {
+    id: ID!
+    name: String!
+    position: String
+    team: Team
+    department: String
+    startDate: Date
+    manager: Employee
+    directReports: [Employee]
+    currentRatings: [EngagementRating]
+    ratingHistory: [EngagementRating]
+    actionItems: [ActionItem]
+}
+
+type Team {
+    id: ID!
+    name: String!
+    description: String
+    members: [Employee]
+}
+
+type EngagementRating {
+    id: ID!
+    employee: Employee!
+    ratingDate: Date!
+    category: CampsCategory!
+    rating: Int!
+    previousRating: Int
+    change: Int
+    notes: String
+    createdBy: Employee
+    createdAt: DateTime
+}
+
+enum CampsCategory {
+    CERTAINTY
+    AUTONOMY
+    MEANING
+    PROGRESS
+    SOCIAL_INCLUSION
+}
+
+type ActionItem {
+    id: ID!
+    employee: Employee!
+    category: CampsCategory
+    description: String!
+    createdDate: Date!
+    dueDate: Date
+    completedDate: Date
+    status: ActionStatus!
+    outcome: String
+    ratingImpact: Int
+    createdBy: Employee
+    createdAt: DateTime
+    updatedAt: DateTime
+}
+
+enum ActionStatus {
+    PLANNED
+    IN_PROGRESS
+    COMPLETED
+    CANCELLED
+}
+
+type TeamStats {
+    id: ID!
+    team: Team!
+    recordDate: Date!
+    category: CampsCategory!
+    averageRating: Float!
+    previousAverageRating: Float
+    employeeCount: Int
+    createdAt: DateTime
+}
+
+type TrendData {
+    id: ID!
+    employee: Employee
+    team: Team
+    recordDate: Date!
+    category: CampsCategory!
+    averageRating: Float!
+    monthOverMonthChange: Float
+    quarterOverQuarterChange: Float
+    yearOverYearChange: Float
+}
+
+type CategoryAverage {
+    category: CampsCategory!
+    averageRating: Float!
+    previousAverageRating: Float
+    change: Float
+}
+
+input EmployeeInput {
+    name: String!
+    position: String
+    teamId: ID
+    department: String
+    startDate: Date
+    managerId: ID
+}
+
+input TeamInput {
+    name: String!
+    description: String
+}
+
+input EngagementRatingInput {
+    employeeId: ID!
+    ratingDate: Date!
+    category: CampsCategory!
+    rating: Int!
+    previousRating: Int
+    notes: String
+}
+
+input ActionItemInput {
+    employeeId: ID!
+    category: CampsCategory
+    description: String!
+    createdDate: Date!
+    dueDate: Date
+    status: ActionStatus!
+}
+
+input DateRangeInput {
+    fromDate: Date!
+    toDate: Date!
+}
+
+enum TimePeriod {
+    LAST_30_DAYS
+    LAST_90_DAYS
+    LAST_6_MONTHS
+    LAST_YEAR
+}
+
+# Queries
+type Query {
+    # Employee queries
+    employees(teamId: ID): [Employee!]!
+    employee(id: ID!): Employee
+
+    # Team queries
+    teams: [Team!]!
+    team(teamId: ID!): Team
+
+    # Rating queries
+    ratings(
+        employeeId: ID,
+        category: CampsCategory,
+        dateRange: DateRangeInput
+    ): [EngagementRating!]!
+
+    # Current ratings for dashboard
+    currentRatings(employeeId: ID): [EngagementRating!]!
+
+    # Team statistics
+    teamStats(
+        teamId: ID!
+        dateRange: DateRangeInput
+    ): [TeamStats!]!
+
+    teamAverages(
+        teamId: ID!,
+        date: Date
+    ): [CategoryAverage!]!
+
+    # Trend analysis
+    trends(
+        employeeId: ID,
+        teamId: ID,
+        category: CampsCategory,
+        timePeriod: TimePeriod!
+    ): [TrendData!]!
+
+    # Action items
+    actionItems(
+        employeeId: ID,
+        status: ActionStatus,
+        dateRange: DateRangeInput
+    ): [ActionItem!]!
+}
+
+# Mutations
+type Mutation {
+    # Employee management
+    createEmployee(input: EmployeeInput!): Employee!
+    updateEmployee(id: ID!, input: EmployeeInput!): Employee!
+    deleteEmployee(id: ID!): Boolean!
+
+    createTeam(input: TeamInput!): Team!
+    updateTeam(id: ID!, input: TeamInput!): Team!
+    deleteTeam(id: ID!): Boolean!
+
+    # Rating management
+    createRating(input: EngagementRatingInput!): EngagementRating!
+    updateRating(id: ID!, input: EngagementRatingInput!): EngagementRating!
+    deleteRating(id: ID!): Boolean!
+
+    # Batch create ratings (for updating all CAMPS categories at once)
+    createRatingsBatch(inputs: [EngagementRatingInput!]!): [EngagementRating!]!
+
+    # Action item management
+    createActionItem(input: ActionItemInput!): ActionItem!
+    updateActionItem(id: ID!, input: ActionItemInput!): ActionItem!
+    completeActionItem(
+        id: ID!,
+        completedDate: Date!,
+        outcome: String,
+        ratingImpact: Int
+    ): ActionItem!
+    cancelActionItem(id: ID!, reason: String): ActionItem!
+    deleteActionItem(id: ID!): Boolean!
+}
+
+# Custom scalars
+scalar Date
+scalar DateTime

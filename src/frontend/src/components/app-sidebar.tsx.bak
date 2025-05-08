@@ -1,0 +1,186 @@
+import React, {useEffect, useState} from 'react';
+import {useGetEmployees, useGetTeams} from '@/api';
+import {Activity, Users} from 'lucide-react';
+import {useLocation} from 'react-router-dom';
+
+import {
+    Sidebar,
+    SidebarContent,
+    SidebarGroup,
+    SidebarGroupContent,
+    SidebarGroupLabel,
+    SidebarHeader,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
+} from '@/components/ui/sidebar';
+import {Skeleton} from "@/components/ui/skeleton.tsx";
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue,} from "@/components/ui/select";
+import {ApolloError} from '@apollo/client';
+
+const renderSidebarContent = (loading: boolean, error: ApolloError | undefined, teamEmployees: any[], selectedTeam: string) => {
+    if (loading) {
+        return (
+            <div className="flex items-center space-x-4">
+                <Skeleton className="h-4 w-[250px]"/>
+                <Skeleton className="h-4 w-[200px]"/>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="text-sm text-destructive px-2 py-1.5">
+                Error loading teams: {error.message}
+            </div>
+        );
+    }
+
+    if (teamEmployees.length > 0) {
+        return (
+            <SidebarMenu>
+                {teamEmployees.map(employee => (
+                    <SidebarMenuItem key={employee.id}>
+                        <SidebarMenuButton asChild>
+                            <a href={`/employee/${employee.id}`}>
+                                <Users className="h-4 w-4"/>
+                                <span>{employee.name}</span>
+                            </a>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                ))}
+            </SidebarMenu>
+        );
+    }
+
+    return (
+        <div className="text-sm text-muted-foreground px-2 py-1.5">
+            {selectedTeam ? 'No employees found in this team.' : 'Select a team.'}
+        </div>
+    );
+};
+
+const AppSidebar = () => {
+    const [selectedTeamId, setSelectedTeamId] = useState<string>('');
+    const {data: employeesData, loading: employeesLoading, error: employeesError} = useGetEmployees();
+    const {data: teamsData, loading: teamsLoading} = useGetTeams();
+    const location = useLocation();
+
+    // Track if this is a manual team selection
+    const isManualSelection = React.useRef(false);
+
+    // Track the previous employee ID to detect changes
+    const prevEmployeeIdRef = React.useRef<string | null>(null);
+
+    // Extract teams from the team query
+    const teams = React.useMemo(() => {
+        if (!teamsData?.teams) return [];
+        return teamsData.teams.sort((a, b) => a.name.localeCompare(b.name));
+    }, [teamsData?.teams]);
+
+    // Extract the employee ID from URL if present
+    const employeeIdFromUrl = React.useMemo(() => {
+        const match = /\/employee\/([^/]+)/.exec(location.pathname);
+        return match ? match[1] : null;
+    }, [location.pathname]);
+
+    // Find an employee by ID
+    const employeeFromUrl = React.useMemo(() => {
+        if (!employeeIdFromUrl || !employeesData?.employees) return null;
+        return employeesData.employees.find(emp => emp.id === employeeIdFromUrl) || null;
+    }, [employeeIdFromUrl, employeesData?.employees]);
+
+    // Load the selected team based on the URL, localStorage, or default to the first team
+    useEffect(() => {
+        // Only auto-select the team if the employee ID changed (new employee page) or initial load
+        const employeeIdChanged = prevEmployeeIdRef.current !== employeeIdFromUrl;
+        prevEmployeeIdRef.current = employeeIdFromUrl;
+
+        // If this is a manual selection, don't override with the URL-based team
+        if (isManualSelection.current) {
+            isManualSelection.current = false;
+            return;
+        }
+
+        if (employeeFromUrl?.team && employeeIdChanged) {
+            // Auto-select the team based on the URL only when the employee changes
+            setSelectedTeamId(employeeFromUrl.team.id);
+            // Also update localStorage to remember this selection
+            localStorage.setItem('selectedTeamId', employeeFromUrl.team.id);
+        } else if (!selectedTeam && teams.length > 0) {
+            // On initial load with no URL employee, use saved team or default
+            const savedTeamId = localStorage.getItem('selectedTeamId');
+            if (savedTeamId && teams.some(team => team.id === savedTeamId)) {
+                setSelectedTeamId(savedTeamId);
+            } else if (teams.length > 0) {
+                setSelectedTeamId(teams[0].id);
+            }
+        }
+    }, [teams, employeeFromUrl, employeeIdFromUrl, selectedTeamId]);
+
+    // Save the selected team to localStorage when it changes
+    const handleTeamChange = (teamId: string) => {
+        // Mark this as a manual selection to prevent the URL-based override
+        isManualSelection.current = true;
+        setSelectedTeamId(teamId);
+        localStorage.setItem('selectedTeamId', teamId);
+    };
+
+    // Get the currently selected team
+    const selectedTeam = React.useMemo(() => {
+        if (!teamsData?.teams || !selectedTeamId) return null;
+        return teamsData.teams.find(team => team.id === selectedTeamId) || null;
+    }, [teamsData?.teams, selectedTeamId]);
+
+    // Filter employees by selected team
+    const teamEmployees = React.useMemo(() => {
+        if (!employeesData?.employees || !selectedTeamId) return [];
+
+        return employeesData.employees
+            .filter(employee => employee.team?.id === selectedTeamId)
+            .sort((a, b) => a.name.localeCompare(b.name));
+    }, [employeesData?.employees, selectedTeamId]);
+
+    const isLoading = teamsLoading || employeesLoading;
+
+    return (
+        <Sidebar>
+            <SidebarHeader className="p-4">
+                <div className="flex items-center gap-2">
+                    <Activity className="h-6 w-6 text-primary"/>
+                    <h2 className="text-xl font-semibold">CAMPS Tracker</h2>
+                </div>
+                <div className="mt-4">
+                    <Select
+                        value={selectedTeamId}
+                        onValueChange={handleTeamChange}
+                        disabled={isLoading || teams.length === 0}
+                    >
+                        <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select a team"/>
+                        </SelectTrigger>
+                        <SelectContent>
+                            {teams.map(team => (
+                                <SelectItem key={team.id} value={team.id}>
+                                    {team.name}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+            </SidebarHeader>
+
+            <SidebarContent>
+                <SidebarGroup>
+                    <SidebarGroupLabel>Team Members</SidebarGroupLabel>
+                    <SidebarGroupContent>
+                        {renderSidebarContent(isLoading, employeesError, teamEmployees, selectedTeamId)}
+                    </SidebarGroupContent>
+                </SidebarGroup>
+            </SidebarContent>
+        </Sidebar>
+    );
+
+};
+
+export default AppSidebar;
