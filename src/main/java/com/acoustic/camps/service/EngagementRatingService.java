@@ -10,6 +10,7 @@ import com.acoustic.camps.model.TeamStatsModel;
 import com.acoustic.camps.repository.EmployeeRepository;
 import com.acoustic.camps.repository.EngagementRatingRepository;
 import com.acoustic.camps.repository.TeamStatsRepository;
+import jakarta.annotation.Resource;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +26,9 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class EngagementRatingService {
+
+    @Resource
+    private EngagementRatingService engagementRatingServiceResource;
 
     private final EngagementRatingRepository ratingRepository;
     private final EmployeeRepository employeeRepository;
@@ -68,7 +72,7 @@ public class EngagementRatingService {
         // Process and save each rating
         List<EngagementRating> savedRatings = new ArrayList<>();
         for (EngagementRating rating : ratings) {
-            savedRatings.add(createRating(rating));
+            savedRatings.add(engagementRatingServiceResource.createRating(rating));
         }
         return savedRatings;
     }

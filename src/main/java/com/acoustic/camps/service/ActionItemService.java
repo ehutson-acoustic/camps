@@ -22,6 +22,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ActionItemService {
 
+    public static final String ACTION_ITEM_NOT_FOUND_WITH_ID = "Action item not found with id: ";
+
     private final ActionItemRepository actionItemRepository;
     private final EngagementRatingRepository ratingRepository;
     private final ActionItemMapper mapper;
@@ -62,7 +64,7 @@ public class ActionItemService {
                     // Don't update employee, createdDate, or completedDate
                     return mapper.toDTO(actionItemRepository.save(item));
                 })
-                .orElseThrow(() -> new IllegalArgumentException("Action item not found with id: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(ACTION_ITEM_NOT_FOUND_WITH_ID + id));
     }
 
     @Transactional
@@ -75,7 +77,7 @@ public class ActionItemService {
                     item.setRatingImpact(ratingImpact);
                     return mapper.toDTO(actionItemRepository.save(item));
                 })
-                .orElseThrow(() -> new IllegalArgumentException("Action item not found with id: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(ACTION_ITEM_NOT_FOUND_WITH_ID + id));
     }
 
     @Transactional
@@ -86,7 +88,7 @@ public class ActionItemService {
                     item.setOutcome(reason);
                     return mapper.toDTO(actionItemRepository.save(item));
                 })
-                .orElseThrow(() -> new IllegalArgumentException("Action item not found with id: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(ACTION_ITEM_NOT_FOUND_WITH_ID + id));
     }
 
     @Transactional

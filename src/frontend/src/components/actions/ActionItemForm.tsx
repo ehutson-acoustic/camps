@@ -177,6 +177,13 @@ const ActionItemForm = ({
         }
     };
 
+    function getSaveButtonText() {
+        if (isLoading) {
+            return 'Saving...';
+        }
+        return isEditing ? 'Update' : 'Create';
+    }
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[500px]">
@@ -351,7 +358,7 @@ const ActionItemForm = ({
                                 Cancel
                             </Button>
                             <Button type="submit" disabled={isLoading}>
-                                {isLoading ? 'Saving...' : isEditing ? 'Update' : 'Create'}
+                                {getSaveButtonText()}
                             </Button>
                         </DialogFooter>
                     </form>

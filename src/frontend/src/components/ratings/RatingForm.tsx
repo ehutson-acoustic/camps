@@ -118,7 +118,7 @@ const RatingForm = ({
                     description: `The ${CAMPS_CATEGORIES[category].name} rating has been updated.`,
                 });
             } else {
-                // Create new rating
+                // Create a new rating
                 await createRating({
                     variables: {
                         input: {
@@ -148,6 +148,13 @@ const RatingForm = ({
             });
         }
     };
+
+    function getSaveButtonText() {
+        if (isLoading) {
+            return 'Saving...';
+        }
+        return isEditing ? 'Update Rating' : 'Save Rating';
+    }
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -222,7 +229,7 @@ const RatingForm = ({
                                 Cancel
                             </Button>
                             <Button type="submit" disabled={isLoading}>
-                                {isLoading ? 'Saving...' : isEditing ? 'Update Rating' : 'Save Rating'}
+                                {getSaveButtonText()}
                             </Button>
                         </DialogFooter>
                     </form>

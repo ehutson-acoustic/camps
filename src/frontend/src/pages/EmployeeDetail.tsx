@@ -223,20 +223,20 @@ const EmployeeDetail: React.FC = () => {
         }
     };
 
-    // Refresh data after rating is saved
+    // Refresh data after a rating is saved
     const handleRatingSuccess = () => {
         refetchRatings();
         refetchEmployee();
     };
 
-    // Refresh data after action item is saved
+    // Refresh data after an action item is saved
     const handleActionItemSuccess = () => {
-        // First close the dialog and reset the state
+        // First, close the dialog and reset the state
         setActionItemDialogOpen(false);
         setSelectedActionItem(null);
 
         // Then, after a small delay, refetch the action items
-        // This  ensures that React has time to process the state change before starting a new operation
+        // This ensures that React has time to process the state change before starting a new operation
         setTimeout(() => {
             refetchActionItems();
         }, 100);

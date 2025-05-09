@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class TeamService {
 
+    private static final String TEAM_NOT_FOUND_WITH_ID = "Team not found with id: ";
     private final TeamRepository teamRepository;
     private final EmployeeRepository employeeRepository;
     private final TeamMapper teamMapper;
@@ -104,7 +105,7 @@ public class TeamService {
                     TeamModel updatedTeam = teamRepository.save(existingTeam);
                     return teamMapper.toDTO(updatedTeam);
                 })
-                .orElseThrow(() -> new IllegalArgumentException("Team not found with id: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(TEAM_NOT_FOUND_WITH_ID + id));
     }
 
     /**
@@ -138,7 +139,7 @@ public class TeamService {
     @Transactional(readOnly = true)
     public List<Employee> getTeamMembers(UUID teamId) {
         TeamModel team = teamRepository.findById(teamId)
-                .orElseThrow(() -> new IllegalArgumentException("Team not found with id: " + teamId));
+                .orElseThrow(() -> new IllegalArgumentException(TEAM_NOT_FOUND_WITH_ID + teamId));
 
         List<EmployeeModel> members = employeeRepository.findByTeam(team);
         return employeeMapper.toDTOList(members);
@@ -183,6 +184,6 @@ public class TeamService {
     @Transactional(readOnly = true)
     public TeamModel getTeamModelById(UUID id) {
         return teamRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Team not found with id: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(TEAM_NOT_FOUND_WITH_ID + id));
     }
 }
