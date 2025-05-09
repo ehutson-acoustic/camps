@@ -211,7 +211,7 @@ const EmployeeDetail: React.FC = () => {
                 description: "The action item has been deleted successfully."
             });
 
-            refetchActionItems();
+            await refetchActionItems();
         } catch (error) {
             console.error('Error deleting action item:', error);
             toast.error("Error", {
