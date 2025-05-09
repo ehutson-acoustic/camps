@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+        id: initialize-tables
+        author: Eric Hutson
+        changes:
+          - sqlFile:
+              path: src/main/resources/db/changelog/create_teams.sql
+          - sqlFile:
+              path: src/main/resources/db/changelog/create_employees.sql
+          - sqlFile:
+              path: src/main/resources/db/changelog/create_engagement_ratings.sql
+          - sqlFile:
+              path: src/main/resources/db/changelog/create_action_items.sql
+          - sqlFile:
+              path: src/main/resources/db/changelog/create_team_stats.sql
+          - sqlFile:
+              path: src/main/resources/db/changelog/create_trend_data.sql
