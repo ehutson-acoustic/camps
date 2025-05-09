@@ -13,7 +13,6 @@ import com.netflix.graphql.dgs.DgsQuery;
 import com.netflix.graphql.dgs.InputArgument;
 import lombok.RequiredArgsConstructor;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -56,7 +55,7 @@ public class EngagementRatingDataFetcher {
     }
 
     @DgsMutation
-    public EngagementRating createRating(@InputArgument EngagementRatingInput input) {
+    public EngagementRating addRating(@InputArgument EngagementRatingInput input) {
         Employee employee = getEmployee(input);
 
         EngagementRating rating = EngagementRating.newBuilder()
@@ -64,59 +63,10 @@ public class EngagementRatingDataFetcher {
                 .ratingDate(input.getRatingDate())
                 .category(input.getCategory())
                 .rating(input.getRating())
-                .previousRating(input.getPreviousRating())
                 .notes(input.getNotes())
                 .build();
 
-        return ratingService.createRating(rating);
-    }
-
-    @DgsMutation
-    public EngagementRating updateRating(@InputArgument String id, @InputArgument EngagementRatingInput input) {
-        Employee employee = getEmployee(input);
-
-        EngagementRating rating = EngagementRating.newBuilder()
-                .employee(employee)
-                .ratingDate(input.getRatingDate())
-                .category(input.getCategory())
-                .rating(input.getRating())
-                .previousRating(input.getPreviousRating())
-                .notes(input.getNotes())
-                .build();
-
-        return ratingService.updateRating(UUID.fromString(id), rating);
-    }
-
-    @DgsMutation
-    public boolean deleteRating(@InputArgument String id) {
-        try {
-            ratingService.deleteRating(UUID.fromString(id));
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    @DgsMutation
-    public List<EngagementRating> createRatingsBatch(@InputArgument List<EngagementRatingInput> inputs) {
-        List<EngagementRating> ratings = new ArrayList<>();
-
-        for (EngagementRatingInput input : inputs) {
-            Employee employee = getEmployee(input);
-
-            EngagementRating rating = EngagementRating.newBuilder()
-                    .employee(employee)
-                    .ratingDate(input.getRatingDate())
-                    .category(input.getCategory())
-                    .rating(input.getRating())
-                    .previousRating(input.getPreviousRating())
-                    .notes(input.getNotes())
-                    .build();
-
-            ratings.add(rating);
-        }
-
-        return ratingService.createBatchRatings(ratings);
+        return ratingService.addRating(rating);
     }
 
     private Employee getEmployee(EngagementRatingInput input) {

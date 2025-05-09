@@ -196,12 +196,7 @@ type Mutation {
     deleteTeam(id: ID!): Boolean!
 
     # Rating management
-    createRating(input: EngagementRatingInput!): EngagementRating!
-    updateRating(id: ID!, input: EngagementRatingInput!): EngagementRating!
-    deleteRating(id: ID!): Boolean!
-
-    # Batch create ratings (for updating all CAMPS categories at once)
-    createRatingsBatch(inputs: [EngagementRatingInput!]!): [EngagementRating!]!
+    addRating(input: EngagementRatingInput!): EngagementRating!
 
     # Action item management
     createActionItem(input: ActionItemInput!): ActionItem!

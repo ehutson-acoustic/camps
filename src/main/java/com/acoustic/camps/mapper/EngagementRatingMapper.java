@@ -30,11 +30,9 @@ public interface EngagementRatingMapper {
     @Mapping(target = "ratingDate", source = "ratingDate")
     @Mapping(target = "category", source = "category")
     @Mapping(target = "rating", source = "rating")
-    @Mapping(target = "previousRating", source = "previousRating")
     @Mapping(target = "notes", source = "notes")
     @Mapping(target = "createdBy", source = "createdBy", qualifiedByName = "employeeToEmployeeMinimal")
     @Mapping(target = "createdAt", source = "createdAt")
-    //@Mapping(target = "updatedAt", source = "updatedAt")
     EngagementRating toDTO(EngagementRatingModel engagementRating);
 
     /**
@@ -48,11 +46,9 @@ public interface EngagementRatingMapper {
     @Mapping(target = "ratingDate", source = "ratingDate")
     @Mapping(target = "category", source = "category")
     @Mapping(target = "rating", source = "rating")
-    @Mapping(target = "previousRating", source = "previousRating")
     @Mapping(target = "notes", source = "notes")
     @Mapping(target = "createdBy", source = "createdBy", qualifiedByName = "employeeDTOToEmployeeMinimal")
     @Mapping(target = "createdAt", source = "createdAt")
-    //@Mapping(target = "updatedAt", source = "updatedAt")
     EngagementRatingModel toEntity(EngagementRating engagementRatingDTO);
 
     /**

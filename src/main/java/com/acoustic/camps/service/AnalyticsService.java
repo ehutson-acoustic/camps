@@ -301,6 +301,7 @@ public class AnalyticsService {
      * @param threshold The minimum change to be considered significant
      * @return List of Maps containing employee details and rating changes
      */
+    /*
     @Transactional(readOnly = true)
     public List<Map<String, Object>> identifySignificantChanges(int threshold) {
         List<Map<String, Object>> results = new ArrayList<>();
@@ -346,7 +347,7 @@ public class AnalyticsService {
 
         return results;
     }
-
+*/
     /**
      * Gets the most improved category for each employee within a date range
      *

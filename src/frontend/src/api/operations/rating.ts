@@ -1,7 +1,7 @@
 // src/api/operations/rating.ts
 import {gql} from '@apollo/client';
 import {CampsCategory, DateRangeInput, EngagementRating, EngagementRatingInput} from '@/types/schema.ts';
-import {EMPLOYEE_FIELDS} from './employee';
+import {EMPLOYEE_FIELDS} from '@/api';
 
 // Fragment for common rating fields
 export const RATING_FIELDS = gql`
@@ -13,7 +13,6 @@ export const RATING_FIELDS = gql`
         previousRating
         change
         notes
-        createdAt
     }
 `;
 
@@ -52,33 +51,9 @@ export const GET_CURRENT_RATINGS = gql`
 `;
 
 // Mutations
-export const CREATE_RATING = gql`
+export const ADD_RATING = gql`
     mutation CreateRating($input: EngagementRatingInput!) {
-        createRating(input: $input) {
-            ...RatingWithEmployee
-        }
-    }
-    ${RATING_WITH_EMPLOYEE}
-`;
-
-export const UPDATE_RATING = gql`
-    mutation UpdateRating($id: ID!, $input: EngagementRatingInput!) {
-        updateRating(id: $id, input: $input) {
-            ...RatingWithEmployee
-        }
-    }
-    ${RATING_WITH_EMPLOYEE}
-`;
-
-export const DELETE_RATING = gql`
-    mutation DeleteRating($id: ID!) {
-        deleteRating(id: $id)
-    }
-`;
-
-export const CREATE_RATINGS_BATCH = gql`
-    mutation CreateRatingsBatch($inputs: [EngagementRatingInput!]!) {
-        createRatingsBatch(inputs: $inputs) {
+        addRating(input: $input) {
             ...RatingWithEmployee
         }
     }
@@ -104,35 +79,10 @@ export interface GetCurrentRatingsVars {
     employeeId?: string;
 }
 
-export interface CreateRatingData {
+export interface AddRatingData {
     createRating: EngagementRating;
 }
 
-export interface CreateRatingVars {
+export interface AddRatingVars {
     input: EngagementRatingInput;
-}
-
-export interface UpdateRatingData {
-    updateRating: EngagementRating;
-}
-
-export interface UpdateRatingVars {
-    id: string;
-    input: EngagementRatingInput;
-}
-
-export interface DeleteRatingData {
-    deleteRating: boolean;
-}
-
-export interface DeleteRatingVars {
-    id: string;
-}
-
-export interface CreateRatingsBatchData {
-    createRatingsBatch: EngagementRating[];
-}
-
-export interface CreateRatingsBatchVars {
-    inputs: EngagementRatingInput[];
 }

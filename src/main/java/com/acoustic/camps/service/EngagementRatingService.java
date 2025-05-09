@@ -10,7 +10,6 @@ import com.acoustic.camps.model.TeamStatsModel;
 import com.acoustic.camps.repository.EmployeeRepository;
 import com.acoustic.camps.repository.EngagementRatingRepository;
 import com.acoustic.camps.repository.TeamStatsRepository;
-import jakarta.annotation.Resource;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,9 +25,6 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class EngagementRatingService {
-
-    @Resource
-    private EngagementRatingService engagementRatingServiceResource;
 
     private final EngagementRatingRepository ratingRepository;
     private final EmployeeRepository employeeRepository;
@@ -51,59 +47,22 @@ public class EngagementRatingService {
     }
 
     @Transactional
-    public EngagementRating createRating(EngagementRating rating) {
-        // Find the previous rating to set the previousRating field
-        ratingRepository.findTopByEmployeeIdAndCategoryOrderByRatingDateDesc(UUID.fromString(rating.getEmployee().getId()), rating.getCategory())
-                .ifPresent(previousRating -> rating.setPreviousRating(previousRating.getRating()));
+    public EngagementRating addRating(EngagementRating rating) {
+        // This is now our only method for adding ratings
+        EngagementRatingModel newRating = mapper.toEntity(rating);
+
+        // Ensure we're creating a new record
+        newRating.setId(null);
 
         // Save the new rating
-        EngagementRatingModel savedRating = ratingRepository.save(mapper.toEntity(rating));
+        EngagementRatingModel savedRating = ratingRepository.save(newRating);
 
         // Update team statistics
-        EmployeeModel employee = employeeRepository.findById(UUID.fromString(rating.getEmployee().getId()))
-                .orElseThrow(() -> new IllegalArgumentException("Employee not found with id: " + rating.getEmployee().getId()));
-        updateTeamStats(employee.getTeam(), rating.getCategory(), rating.getRatingDate());
+        //EmployeeModel employee = employeeRepository.findById(UUID.fromString(rating.getEmployee().getId()))
+        //        .orElseThrow(() -> new IllegalArgumentException("Employee not found with id: " + rating.getEmployee().getId()));
+        //updateTeamStats(employee.getTeam(), rating.getCategory(), rating.getRatingDate());
 
         return mapper.toDTO(savedRating);
-    }
-
-    @Transactional
-    public List<EngagementRating> createBatchRatings(List<EngagementRating> ratings) {
-        // Process and save each rating
-        List<EngagementRating> savedRatings = new ArrayList<>();
-        for (EngagementRating rating : ratings) {
-            savedRatings.add(engagementRatingServiceResource.createRating(rating));
-        }
-        return savedRatings;
-    }
-
-    @Transactional
-    public EngagementRating updateRating(UUID id, EngagementRating updatedRating) {
-        return ratingRepository.findById(id)
-                .map(rating -> {
-                    rating.setPreviousRating(rating.getRating());
-                    rating.setRating(updatedRating.getRating());
-                    rating.setNotes(updatedRating.getNotes());
-                    // Don't update employee, date, category, or previousRating
-                    EngagementRatingModel saved = ratingRepository.save(rating);
-
-                    // Update team statistics
-                    updateTeamStats(rating.getEmployee().getTeam(), rating.getCategory(), rating.getRatingDate());
-
-                    return mapper.toDTO(saved);
-                })
-                .orElseThrow(() -> new IllegalArgumentException("Rating not found with id: " + id));
-    }
-
-    @Transactional
-    public void deleteRating(UUID id) {
-        EngagementRatingModel rating = ratingRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Rating not found with id: " + id));
-
-        ratingRepository.deleteById(id);
-
-        // Update team statistics
-        updateTeamStats(rating.getEmployee().getTeam(), rating.getCategory(), rating.getRatingDate());
     }
 
     /**

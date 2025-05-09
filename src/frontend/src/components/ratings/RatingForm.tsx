@@ -4,9 +4,7 @@ import {zodResolver} from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import {format} from 'date-fns';
 import {CampsCategory} from '@/types/schema';
-import {useCreateRating, useUpdateRating} from '@/api';
 
-// Import shadcn components
 import {
     Dialog,
     DialogContent,
@@ -20,35 +18,8 @@ import {Slider} from '@/components/ui/slider';
 import {Textarea} from '@/components/ui/textarea';
 import {Button} from '@/components/ui/button';
 import {toast} from 'sonner';
-
-// CAMPS category info with descriptions
-const CAMPS_CATEGORIES = {
-    [CampsCategory.CERTAINTY]: {
-        name: 'Certainty',
-        description: 'Confidence about the future and how things work',
-        color: 'bg-blue-500'
-    },
-    [CampsCategory.AUTONOMY]: {
-        name: 'Autonomy',
-        description: 'Control over decisions that affect your work',
-        color: 'bg-green-500'
-    },
-    [CampsCategory.MEANING]: {
-        name: 'Meaning',
-        description: 'Sense of purpose and fulfillment in work',
-        color: 'bg-purple-500'
-    },
-    [CampsCategory.PROGRESS]: {
-        name: 'Progress',
-        description: 'Moving forward and achieving goals',
-        color: 'bg-orange-500'
-    },
-    [CampsCategory.SOCIAL_INCLUSION]: {
-        name: 'Social Inclusion',
-        description: 'Feeling part of a supportive team/community',
-        color: 'bg-pink-500'
-    },
-};
+import {useAddRating} from "@/api";
+import {CAMPS_CATEGORIES} from "@/lib/CampsCategories";
 
 // Form schema definition
 const formSchema = z.object({
@@ -91,19 +62,17 @@ const RatingForm = ({
     });
 
     // Mutations for creating/updating ratings
-    const [createRating, {loading: createLoading}] = useCreateRating();
-    const [updateRating, {loading: updateLoading}] = useUpdateRating();
+    const [addRating, {loading: ratingLoading}] = useAddRating();
 
-    const isLoading = createLoading || updateLoading;
+    const isLoading = ratingLoading;
 
     // Handle form submission
     const onSubmit = async (data: FormValues) => {
         try {
             if (isEditing && existingRating) {
                 // Update existing rating
-                await updateRating({
+                await addRating({
                     variables: {
-                        id: existingRating.id,
                         input: {
                             employeeId,
                             ratingDate: format(new Date(), 'yyyy-MM-dd'),
@@ -119,7 +88,7 @@ const RatingForm = ({
                 });
             } else {
                 // Create a new rating
-                await createRating({
+                await addRating({
                     variables: {
                         input: {
                             employeeId,

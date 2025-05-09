@@ -29,6 +29,9 @@ public interface EngagementRatingRepository extends JpaRepository<EngagementRati
     Optional<EngagementRatingModel> findTopByEmployeeIdAndCategoryAndRatingDateLessThanEqualOrderByRatingDateDesc(
             UUID employeeId, CampsCategory category, LocalDate maxDate);
 
+    Optional<EngagementRatingModel> findTopByEmployeeIdAndCategoryAndRatingDateLessThanOrderByRatingDateDesc(
+            UUID employeeId, CampsCategory category, LocalDate ratingDate);
+
     List<EngagementRatingModel> findByRatingDateBetweenOrderByRatingDateDesc(
             LocalDate fromDate, LocalDate toDate);
 
