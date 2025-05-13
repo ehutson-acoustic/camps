@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -27,13 +27,13 @@ public interface EngagementRatingRepository extends JpaRepository<EngagementRati
             UUID employeeId, CampsCategory category);
 
     Optional<EngagementRatingModel> findTopByEmployeeIdAndCategoryAndRatingDateLessThanEqualOrderByRatingDateDesc(
-            UUID employeeId, CampsCategory category, LocalDate maxDate);
+            UUID employeeId, CampsCategory category, OffsetDateTime maxDate);
 
     Optional<EngagementRatingModel> findTopByEmployeeIdAndCategoryAndRatingDateLessThanOrderByRatingDateDesc(
-            UUID employeeId, CampsCategory category, LocalDate ratingDate);
+            UUID employeeId, CampsCategory category, OffsetDateTime ratingDate);
 
     List<EngagementRatingModel> findByRatingDateBetweenOrderByRatingDateDesc(
-            LocalDate fromDate, LocalDate toDate);
+            OffsetDateTime fromDate, OffsetDateTime toDate);
 
     @Query("SELECT er FROM EngagementRatingModel er " +
             "JOIN er.employee e " +
@@ -44,7 +44,7 @@ public interface EngagementRatingRepository extends JpaRepository<EngagementRati
     List<EngagementRatingModel> findCurrentTeamRatingsByCategory(
             @Param("teamName") String teamName,
             @Param("category") CampsCategory category,
-            @Param("asOfDate") LocalDate asOfDate);
+            @Param("asOfDate") OffsetDateTime asOfDate);
 
     @Query("SELECT AVG(er.rating) FROM EngagementRatingModel er " +
             "JOIN er.employee e " +
@@ -55,11 +55,11 @@ public interface EngagementRatingRepository extends JpaRepository<EngagementRati
     Double findAverageTeamRatingByCategory(
             @Param("teamName") String teamName,
             @Param("category") CampsCategory category,
-            @Param("asOfDate") LocalDate asOfDate);
+            @Param("asOfDate") OffsetDateTime asOfDate);
 
     @Query("SELECT er FROM EngagementRatingModel er " +
             "WHERE er.employee.id = :employeeId AND er.ratingDate = :ratingDate")
     List<EngagementRatingModel> findByEmployeeIdAndRatingDate(
             @Param("employeeId") UUID employeeId,
-            @Param("ratingDate") LocalDate ratingDate);
+            @Param("ratingDate") OffsetDateTime ratingDate);
 }

@@ -14,7 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -42,7 +42,7 @@ public class EngagementRatingService {
     }
 
     @Transactional(readOnly = true)
-    public List<EngagementRating> getRatingsByDateRange(LocalDate fromDate, LocalDate toDate) {
+    public List<EngagementRating> getRatingsByDateRange(OffsetDateTime fromDate, OffsetDateTime toDate) {
         return mapper.toDTOList(ratingRepository.findByRatingDateBetweenOrderByRatingDateDesc(fromDate, toDate));
     }
 
@@ -68,7 +68,7 @@ public class EngagementRatingService {
     /**
      * Updates the team statistics for a given category and date
      */
-    private void updateTeamStats(TeamModel team, CampsCategory category, LocalDate date) {
+    private void updateTeamStats(TeamModel team, CampsCategory category, OffsetDateTime date) {
         if (team == null) {
             return;
         }

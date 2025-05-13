@@ -2,7 +2,6 @@
 import {useForm} from 'react-hook-form';
 import {zodResolver} from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import {format} from 'date-fns';
 import {CampsCategory} from '@/types/schema';
 
 import {
@@ -20,6 +19,7 @@ import {Button} from '@/components/ui/button';
 import {toast} from 'sonner';
 import {useAddRating} from "@/api";
 import {CAMPS_CATEGORIES} from "@/lib/CampsCategories";
+import {OffsetDateTime} from "@js-joda/core";
 
 // Form schema definition
 const formSchema = z.object({
@@ -75,7 +75,7 @@ const RatingForm = ({
                     variables: {
                         input: {
                             employeeId,
-                            ratingDate: format(new Date(), 'yyyy-MM-dd'),
+                            ratingDate: OffsetDateTime.now().toString(),
                             category,
                             rating: data.rating,
                             notes: data.notes ?? null,
@@ -92,7 +92,7 @@ const RatingForm = ({
                     variables: {
                         input: {
                             employeeId,
-                            ratingDate: format(new Date(), 'yyyy-MM-dd'),
+                            ratingDate: OffsetDateTime.now().toString(),
                             category,
                             rating: data.rating,
                             notes: data.notes ?? null,

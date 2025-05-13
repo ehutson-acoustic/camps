@@ -56,7 +56,7 @@ public interface TeamMapper {
     @Mapping(target = "name", source = "name")
     @Mapping(target = "description", source = "description")
     // Skip circular references
-    @Mapping(target = "members", ignore = true)
+    //@Mapping(target = "members", ignore = true)
     TeamModel toEntity(Team team);
 
     /**
@@ -71,7 +71,7 @@ public interface TeamMapper {
     @Mapping(target = "name", source = "name")
     // Ignore all collections and additional fields
     @Mapping(target = "description", ignore = true)
-    @Mapping(target = "members", ignore = true)
+    //@Mapping(target = "members", ignore = true)
     TeamModel toTeamMinimal(Team team);
 
     /**

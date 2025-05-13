@@ -74,17 +74,4 @@ public interface EngagementRatingMapper {
      * @return List of model entities
      */
     List<EngagementRatingModel> toEntityList(List<EngagementRating> engagementRatingDTOList);
-
-    /**
-     * Helper method to calculate rating change
-     */
-    @AfterMapping
-    default void calculateChange(@MappingTarget EngagementRating engagementRatingDTO) {
-        Integer current = engagementRatingDTO.getRating();
-        Integer previous = engagementRatingDTO.getPreviousRating();
-
-        if (current != null && previous != null) {
-            engagementRatingDTO.setChange(current - previous);
-        }
-    }
 }

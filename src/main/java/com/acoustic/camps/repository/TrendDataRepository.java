@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,7 +22,7 @@ public interface TrendDataRepository extends JpaRepository<TrendDataModel, UUID>
      * Find trend data for a specific employee and category
      *
      * @param employeeId Employee ID
-     * @param category CAMPS category
+     * @param category   CAMPS category
      * @return List of trend data ordered by date ascending
      */
     List<TrendDataModel> findByEmployeeIdAndCategoryOrderByRecordDateAsc(
@@ -32,18 +32,18 @@ public interface TrendDataRepository extends JpaRepository<TrendDataModel, UUID>
      * Find trend data for a specific employee, category, and date range
      *
      * @param employeeId Employee ID
-     * @param category CAMPS category
-     * @param fromDate Start date (inclusive)
-     * @param toDate End date (inclusive)
+     * @param category   CAMPS category
+     * @param fromDate   Start date (inclusive)
+     * @param toDate     End date (inclusive)
      * @return List of trend data ordered by date ascending
      */
     List<TrendDataModel> findByEmployeeIdAndCategoryAndRecordDateBetweenOrderByRecordDateAsc(
-            UUID employeeId, CampsCategory category, LocalDate fromDate, LocalDate toDate);
+            UUID employeeId, CampsCategory category, OffsetDateTime fromDate, OffsetDateTime toDate);
 
     /**
      * Find trend data for a specific team and category
      *
-     * @param team The team
+     * @param team     The team
      * @param category CAMPS category
      * @return List of trend data ordered by date ascending
      */
@@ -53,21 +53,21 @@ public interface TrendDataRepository extends JpaRepository<TrendDataModel, UUID>
     /**
      * Find trend data for a specific team, category, and date range
      *
-     * @param team The team
+     * @param team     The team
      * @param category CAMPS category
      * @param fromDate Start date (inclusive)
-     * @param toDate End date (inclusive)
+     * @param toDate   End date (inclusive)
      * @return List of trend data ordered by date ascending
      */
     List<TrendDataModel> findByTeamAndCategoryAndRecordDateBetweenOrderByRecordDateAsc(
-            TeamModel team, CampsCategory category, LocalDate fromDate, LocalDate toDate);
+            TeamModel team, CampsCategory category, OffsetDateTime fromDate, OffsetDateTime toDate);
 
     /**
      * Find organization-wide trends for a specific category and date range
      *
      * @param category CAMPS category
      * @param fromDate Start date (inclusive)
-     * @param toDate End date (inclusive)
+     * @param toDate   End date (inclusive)
      * @return List of trend data ordered by date ascending
      */
     @Query("SELECT td FROM TrendDataModel td " +
@@ -76,14 +76,14 @@ public interface TrendDataRepository extends JpaRepository<TrendDataModel, UUID>
             "ORDER BY td.recordDate ASC")
     List<TrendDataModel> findOrganizationWideTrends(
             @Param("category") CampsCategory category,
-            @Param("fromDate") LocalDate fromDate,
-            @Param("toDate") LocalDate toDate);
+            @Param("fromDate") OffsetDateTime fromDate,
+            @Param("toDate") OffsetDateTime toDate);
 
     /**
      * Find teams with the highest improvement rate
      *
      * @param fromDate Start date (inclusive)
-     * @param toDate End date (inclusive)
+     * @param toDate   End date (inclusive)
      * @return List of Object arrays with team and average change
      */
     @Query("SELECT td.team, td.category, AVG(td.monthOverMonthChange) as avgChange " +
@@ -92,6 +92,6 @@ public interface TrendDataRepository extends JpaRepository<TrendDataModel, UUID>
             "GROUP BY td.team, td.category " +
             "ORDER BY avgChange DESC")
     List<Object[]> findTeamsWithHighestImprovementRate(
-            @Param("fromDate") LocalDate fromDate,
-            @Param("toDate") LocalDate toDate);
+            @Param("fromDate") OffsetDateTime fromDate,
+            @Param("toDate") OffsetDateTime toDate);
 }

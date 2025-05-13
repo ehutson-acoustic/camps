@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -31,7 +31,7 @@ public interface ActionItemRepository extends JpaRepository<ActionItemModel, UUI
             UUID employeeId, List<ActionStatus> statuses);
 
     List<ActionItemModel> findByDueDateBeforeAndStatusIn(
-            LocalDate date, List<ActionStatus> statuses);
+            OffsetDateTime date, List<ActionStatus> statuses);
 
     @Query("SELECT ai FROM ActionItemModel ai " +
             "JOIN ai.employee e " +
@@ -47,8 +47,8 @@ public interface ActionItemRepository extends JpaRepository<ActionItemModel, UUI
     List<ActionItemModel> findCompletedActionItemsByEmployeeAndCategory(
             @Param("employeeId") UUID employeeId,
             @Param("category") CampsCategory category,
-            @Param("fromDate") LocalDate fromDate,
-            @Param("toDate") LocalDate toDate);
+            @Param("fromDate") OffsetDateTime fromDate,
+            @Param("toDate") OffsetDateTime toDate);
 
-    List<ActionItemModel> findByCreatedDateBetweenOrderByCreatedDateDesc(LocalDate fromDate, LocalDate toDate);
+    List<ActionItemModel> findByCreatedDateBetweenOrderByCreatedDateDesc(OffsetDateTime fromDate, OffsetDateTime toDate);
 }

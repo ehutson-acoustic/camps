@@ -11,7 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -68,7 +68,7 @@ public class ActionItemService {
     }
 
     @Transactional
-    public ActionItem completeActionItem(UUID id, LocalDate completedDate, String outcome, Integer ratingImpact) {
+    public ActionItem completeActionItem(UUID id, OffsetDateTime completedDate, String outcome, Integer ratingImpact) {
         return actionItemRepository.findById(id)
                 .map(item -> {
                     item.setStatus(ActionStatus.COMPLETED);
@@ -100,7 +100,7 @@ public class ActionItemService {
         return mapper.toDTOList(actionItemRepository.findByIdAndStatusIn(employeeId, statuses));
     }
 
-    public List<ActionItem> getActionItemsByDateRange(LocalDate fromDate, LocalDate toDate) {
+    public List<ActionItem> getActionItemsByDateRange(OffsetDateTime fromDate, OffsetDateTime toDate) {
         return mapper.toDTOList(actionItemRepository.findByCreatedDateBetweenOrderByCreatedDateDesc(fromDate, toDate));
     }
 }

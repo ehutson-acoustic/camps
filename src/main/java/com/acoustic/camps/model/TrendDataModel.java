@@ -21,8 +21,7 @@ import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.proxy.HibernateProxy;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -54,7 +53,7 @@ public class TrendDataModel {
     private TeamModel team;
 
     @Column(nullable = false)
-    private LocalDate recordDate;
+    private OffsetDateTime recordDate;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -73,19 +72,17 @@ public class TrendDataModel {
     private Double yearOverYearChange;
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
+        createdAt = OffsetDateTime.now();
     }
 
     @Override
     public final boolean equals(Object o) {
-        if (o == null) return false;
-        if (this.getClass() != o.getClass()) {
-            return false;
-        }
+        if (this == o) return true;
+        if (o == null || this.getClass() != o.getClass()) return false;
         Class<?> oEffectiveClass = o instanceof HibernateProxy hp ? hp.getHibernateLazyInitializer().getPersistentClass() : o.getClass();
         Class<?> thisEffectiveClass = this instanceof HibernateProxy hp ? hp.getHibernateLazyInitializer().getPersistentClass() : this.getClass();
         if (thisEffectiveClass != oEffectiveClass) return false;

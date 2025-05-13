@@ -4,7 +4,7 @@ type Employee {
     position: String
     team: Team
     department: String
-    startDate: Date
+    startDate: DateTime
     manager: Employee
     directReports: [Employee]
     currentRatings: [EngagementRating]
@@ -22,11 +22,9 @@ type Team {
 type EngagementRating {
     id: ID!
     employee: Employee!
-    ratingDate: Date!
+    ratingDate: DateTime!
     category: CampsCategory!
     rating: Int!
-    previousRating: Int
-    change: Int
     notes: String
     createdBy: Employee
     createdAt: DateTime
@@ -45,9 +43,9 @@ type ActionItem {
     employee: Employee!
     category: CampsCategory
     description: String!
-    createdDate: Date!
-    dueDate: Date
-    completedDate: Date
+    createdDate: DateTime!
+    dueDate: DateTime
+    completedDate: DateTime
     status: ActionStatus!
     outcome: String
     ratingImpact: Int
@@ -66,7 +64,7 @@ enum ActionStatus {
 type TeamStats {
     id: ID!
     team: Team!
-    recordDate: Date!
+    recordDate: DateTime!
     category: CampsCategory!
     averageRating: Float!
     previousAverageRating: Float
@@ -78,7 +76,7 @@ type TrendData {
     id: ID!
     employee: Employee
     team: Team
-    recordDate: Date!
+    recordDate: DateTime!
     category: CampsCategory!
     averageRating: Float!
     monthOverMonthChange: Float
@@ -98,7 +96,7 @@ input EmployeeInput {
     position: String
     teamId: ID
     department: String
-    startDate: Date
+    startDate: DateTime
     managerId: ID
 }
 
@@ -109,10 +107,9 @@ input TeamInput {
 
 input EngagementRatingInput {
     employeeId: ID!
-    ratingDate: Date!
+    ratingDate: DateTime!
     category: CampsCategory!
     rating: Int!
-    previousRating: Int
     notes: String
 }
 
@@ -120,14 +117,14 @@ input ActionItemInput {
     employeeId: ID!
     category: CampsCategory
     description: String!
-    createdDate: Date!
-    dueDate: Date
+    createdDate: DateTime!
+    dueDate: DateTime
     status: ActionStatus!
 }
 
 input DateRangeInput {
-    fromDate: Date!
-    toDate: Date!
+    fromDate: DateTime!
+    toDate: DateTime!
 }
 
 enum TimePeriod {
@@ -165,7 +162,7 @@ type Query {
 
     teamAverages(
         teamId: ID!,
-        date: Date
+        date: DateTime
     ): [CategoryAverage!]!
 
     # Trend analysis
@@ -203,7 +200,7 @@ type Mutation {
     updateActionItem(id: ID!, input: ActionItemInput!): ActionItem!
     completeActionItem(
         id: ID!,
-        completedDate: Date!,
+        completedDate: DateTime!,
         outcome: String,
         ratingImpact: Int
     ): ActionItem!
@@ -212,5 +209,5 @@ type Mutation {
 }
 
 # Custom scalars
-scalar Date
+#scalar Date
 scalar DateTime

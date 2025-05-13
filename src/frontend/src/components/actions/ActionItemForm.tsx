@@ -1,7 +1,7 @@
 import {useForm} from 'react-hook-form';
 import {zodResolver} from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import {format, parse} from 'date-fns';
+import {format} from 'date-fns';
 import {ActionStatus, CampsCategory} from '@/types/schema';
 import {useCreateActionItem, useUpdateActionItem} from '@/api';
 
@@ -22,35 +22,8 @@ import {Popover, PopoverContent, PopoverTrigger,} from '@/components/ui/popover'
 import {toast} from 'sonner';
 import {CalendarIcon} from 'lucide-react';
 import {cn} from '@/lib/utils';
-
-// CAMPS category info with descriptions
-const CAMPS_CATEGORIES = {
-    [CampsCategory.CERTAINTY]: {
-        name: 'Certainty',
-        description: 'Confidence about the future and how things work',
-        color: 'bg-blue-500'
-    },
-    [CampsCategory.AUTONOMY]: {
-        name: 'Autonomy',
-        description: 'Control over decisions that affect your work',
-        color: 'bg-green-500'
-    },
-    [CampsCategory.MEANING]: {
-        name: 'Meaning',
-        description: 'Sense of purpose and fulfillment in work',
-        color: 'bg-purple-500'
-    },
-    [CampsCategory.PROGRESS]: {
-        name: 'Progress',
-        description: 'Moving forward and achieving goals',
-        color: 'bg-orange-500'
-    },
-    [CampsCategory.SOCIAL_INCLUSION]: {
-        name: 'Social Inclusion',
-        description: 'Feeling part of a supportive team/community',
-        color: 'bg-pink-500'
-    },
-};
+import {OffsetDateTime} from "@js-joda/core";
+import {CAMPS_CATEGORIES} from "@/lib/CampsCategories.ts";
 
 // Action Status info
 const ACTION_STATUSES = [
@@ -95,6 +68,8 @@ const ActionItemForm = ({
                         }: ActionItemFormProps) => {
     const isEditing = !!existingItem;
 
+    console.log("Existing item:", existingItem);
+
     // Initialize the form
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
@@ -102,7 +77,7 @@ const ActionItemForm = ({
             description: existingItem?.description ?? '',
             category: existingItem?.category ?? undefined,
             dueDate: existingItem?.dueDate
-                ? parse(existingItem.dueDate, 'yyyy-MM-dd', new Date())
+                ? new Date(existingItem.dueDate)
                 : undefined,
             status: existingItem?.status ?? ActionStatus.PLANNED,
             outcome: existingItem?.outcome ?? '',
@@ -131,8 +106,9 @@ const ActionItemForm = ({
                             employeeId,
                             description: data.description,
                             category: data.category,
-                            createdDate: format(new Date(), 'yyyy-MM-dd'),
-                            dueDate: data.dueDate ? format(data.dueDate, 'yyyy-MM-dd') : null,
+                            createdDate: OffsetDateTime.now().toString(),
+                            //dueDate: data.dueDate ? format(data.dueDate, 'yyyy-MM-dd') : null,
+                            dueDate: data.dueDate ? OffsetDateTime.parse(data.dueDate.toISOString()).toString() : null,
                             status: data.status,
                         },
                     },
@@ -149,8 +125,8 @@ const ActionItemForm = ({
                             employeeId,
                             description: data.description,
                             category: data.category,
-                            createdDate: format(new Date(), 'yyyy-MM-dd'),
-                            dueDate: data.dueDate ? format(data.dueDate, 'yyyy-MM-dd') : null,
+                            createdDate: OffsetDateTime.now().toString(),
+                            dueDate: data.dueDate ? OffsetDateTime.parse(data.dueDate.toISOString()).toString() : null,
                             status: data.status,
                         },
                     },
@@ -268,6 +244,8 @@ const ActionItemForm = ({
                                                         )}
                                                     >
                                                         {field.value ? (
+                                                            //field.value.toString()
+                                                            //OffsetDateTime.parse(field.value.toISOString()).format(DateTimeFormatter.ofPattern("PPP"))
                                                             format(field.value, "PPP")
                                                         ) : (
                                                             <span>Pick a date</span>
@@ -281,7 +259,7 @@ const ActionItemForm = ({
                                                     mode="single"
                                                     selected={field.value}
                                                     onSelect={(date) => {
-                                                        console.log("Selected date:", date);
+                                                        console.log("Selected date:", JSON.stringify(date, null, 2));
                                                         field.onChange(date);
                                                         // Close the popover after selecting a date
                                                         open = false;

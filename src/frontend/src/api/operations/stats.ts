@@ -60,7 +60,7 @@ export const GET_TEAM_STATS = gql`
 `;
 
 export const GET_TEAM_AVERAGES = gql`
-    query GetTeamAverages($teamId: ID!, $date: Date) {
+    query GetTeamAverages($teamId: ID!, $date: DateTime) {
         teamAverages(teamId: $teamId, date: $date) {
             ...CategoryAverageFields
         }

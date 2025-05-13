@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -40,7 +40,7 @@ public class TeamStatsService {
      * @return List of TeamStatsDTO objects
      */
     @Transactional(readOnly = true)
-    public List<TeamStats> getTeamStatsByDateRange(UUID teamId, LocalDate fromDate, LocalDate toDate) {
+    public List<TeamStats> getTeamStatsByDateRange(UUID teamId, OffsetDateTime fromDate, OffsetDateTime toDate) {
         TeamModel team = getTeamModel(teamId);
 
         // Fetch entities from a repository
@@ -63,7 +63,7 @@ public class TeamStatsService {
      */
     @Transactional(readOnly = true)
     public List<TeamStats> getTeamStatsByCategoryAndDateRange(
-            UUID teamId, CampsCategory category, LocalDate fromDate, LocalDate toDate) {
+            UUID teamId, CampsCategory category, OffsetDateTime fromDate, OffsetDateTime toDate) {
 
         TeamModel team = getTeamModel(teamId);
 
@@ -115,11 +115,11 @@ public class TeamStatsService {
      * @return Map of category to average rating
      */
     @Transactional(readOnly = true)
-    public Map<CampsCategory, Double> getTeamAverages(UUID teamId, LocalDate date) {
+    public Map<CampsCategory, Double> getTeamAverages(UUID teamId, OffsetDateTime date) {
         TeamModel team = getTeamModel(teamId);
 
         if (date == null) {
-            date = LocalDate.now();
+            date = OffsetDateTime.now();
         }
 
         Map<CampsCategory, Double> averages = new EnumMap<>(CampsCategory.class);
@@ -184,9 +184,9 @@ public class TeamStatsService {
      * @return Map of team name to average rating, sorted by the highest rating first
      */
     @Transactional(readOnly = true)
-    public Map<String, Double> getTeamsWithHighestAverageByCategory(CampsCategory category, LocalDate date) {
+    public Map<String, Double> getTeamsWithHighestAverageByCategory(CampsCategory category, OffsetDateTime date) {
         if (date == null) {
-            date = LocalDate.now();
+            date = OffsetDateTime.now();
         }
 
         List<Object[]> results = teamStatsRepository.findTeamsWithHighestAverageByCategory(category, date);

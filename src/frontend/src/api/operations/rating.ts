@@ -1,4 +1,3 @@
-// src/api/operations/rating.ts
 import {gql} from '@apollo/client';
 import {CampsCategory, DateRangeInput, EngagementRating, EngagementRatingInput} from '@/types/schema.ts';
 import {EMPLOYEE_FIELDS} from '@/api';
@@ -10,8 +9,6 @@ export const RATING_FIELDS = gql`
         ratingDate
         category
         rating
-        previousRating
-        change
         notes
     }
 `;

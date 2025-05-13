@@ -1,10 +1,8 @@
 import {useForm} from 'react-hook-form';
 import {zodResolver} from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import {format} from 'date-fns';
 import {useCancelActionItem, useCompleteActionItem} from '@/api';
 
-// Import shadcn components
 import {
     Dialog,
     DialogContent,
@@ -18,6 +16,7 @@ import {Textarea} from '@/components/ui/textarea';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {toast} from 'sonner';
+import {OffsetDateTime} from "@js-joda/core";
 
 // Form schema definition for completing an action item
 const completeFormSchema = z.object({
@@ -76,7 +75,7 @@ const ActionItemStatusForm = ({
             await completeActionItem({
                 variables: {
                     id: actionItemId,
-                    completedDate: format(new Date(), 'yyyy-MM-dd'),
+                    completedDate: OffsetDateTime.now().toString(),
                     outcome: data.outcome ?? undefined,
                     ratingImpact: data.ratingImpact ?? undefined,
                 },

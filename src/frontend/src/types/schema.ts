@@ -23,8 +23,7 @@ export enum TimePeriod {
 
 // Scalar types
 export type ID = string;
-export type Date = string;
-export type DateTime = string;
+export type OffsetDateTime = string;
 
 export interface Team {
     id: ID;
@@ -40,7 +39,7 @@ export interface EmployeeInput {
     position?: string | null;
     teamId?: ID | null;
     department?: string | null;
-    startDate?: Date | null;
+    startDate?: OffsetDateTime | null;
     managerId?: ID | null;
 }
 
@@ -51,10 +50,9 @@ export interface TeamInput {
 
 export interface EngagementRatingInput {
     employeeId: ID;
-    ratingDate: Date;
+    ratingDate: OffsetDateTime;
     category: CampsCategory;
     rating: number;
-    previousRating?: number | null;
     notes?: string | null;
 }
 
@@ -62,14 +60,14 @@ export interface ActionItemInput {
     employeeId: ID;
     category?: CampsCategory | null;
     description: string;
-    createdDate: Date;
-    dueDate?: Date | null;
+    createdDate: OffsetDateTime;
+    dueDate?: OffsetDateTime | null;
     status: ActionStatus;
 }
 
 export interface DateRangeInput {
-    fromDate: Date;
-    toDate: Date;
+    fromDate: OffsetDateTime;
+    toDate: OffsetDateTime;
 }
 
 // Entity types
@@ -79,7 +77,7 @@ export interface Employee {
     position?: string | null;
     team?: Team | null;
     department?: string | null;
-    startDate?: Date | null;
+    startDate?: OffsetDateTime | null;
     manager?: Employee | null;
     directReports?: Employee[] | null;
     currentRatings?: EngagementRating[] | null;
@@ -88,18 +86,17 @@ export interface Employee {
 }
 
 
-
 export interface EngagementRating {
     id: ID;
     employee: Employee;
-    ratingDate: Date;
+    ratingDate: OffsetDateTime;
     category: CampsCategory;
     rating: number;
     previousRating?: number | null;
     change?: number | null;
     notes?: string | null;
     createdBy?: Employee | null;
-    createdAt?: DateTime | null;
+    createdAt?: OffsetDateTime | null;
 }
 
 export interface ActionItem {
@@ -107,33 +104,33 @@ export interface ActionItem {
     employee: Employee;
     category?: CampsCategory | null;
     description: string;
-    createdDate: Date;
-    dueDate?: Date | null;
-    completedDate?: Date | null;
+    createdDate: OffsetDateTime;
+    dueDate?: OffsetDateTime | null;
+    completedDate?: OffsetDateTime | null;
     status: ActionStatus;
     outcome?: string | null;
     ratingImpact?: number | null;
     createdBy?: Employee | null;
-    createdAt?: DateTime | null;
-    updatedAt?: DateTime | null;
+    createdAt?: OffsetDateTime | null;
+    updatedAt?: OffsetDateTime | null;
 }
 
 export interface TeamStats {
     id: ID;
     team: Team;
-    recordDate: Date;
+    recordDate: OffsetDateTime;
     category: CampsCategory;
     averageRating: number;
     previousAverageRating?: number | null;
     employeeCount?: number | null;
-    createdAt?: DateTime | null;
+    createdAt?: OffsetDateTime | null;
 }
 
 export interface TrendData {
     id: ID;
     employee?: Employee | null;
     team?: Team | null;
-    recordDate: Date;
+    recordDate: OffsetDateTime;
     category: CampsCategory;
     averageRating: number;
     monthOverMonthChange?: number | null;

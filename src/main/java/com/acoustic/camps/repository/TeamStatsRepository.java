@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -20,7 +20,7 @@ import java.util.UUID;
 public interface TeamStatsRepository extends JpaRepository<TeamStatsModel, UUID> {
 
     /**
-     * Find the most recent team statistics record for a given team, category and exact date
+     * Find the most recent team statistics record for a given team, category, and exact date
      *
      * @param team       The team
      * @param category   The CAMPS category
@@ -28,7 +28,7 @@ public interface TeamStatsRepository extends JpaRepository<TeamStatsModel, UUID>
      * @return The matching TeamStats record, if found
      */
     Optional<TeamStatsModel> findTopByTeamAndCategoryAndRecordDateOrderByRecordDateDesc(
-            TeamModel team, CampsCategory category, LocalDate recordDate);
+            TeamModel team, CampsCategory category, OffsetDateTime recordDate);
 
     /**
      * Find the most recent team statistics record for a given team and category
@@ -40,7 +40,7 @@ public interface TeamStatsRepository extends JpaRepository<TeamStatsModel, UUID>
      * @return The most recent TeamStats record, if found
      */
     Optional<TeamStatsModel> findTopByTeamAndCategoryAndRecordDateLessThanEqualOrderByRecordDateDesc(
-            TeamModel team, CampsCategory category, LocalDate maxDate);
+            TeamModel team, CampsCategory category, OffsetDateTime maxDate);
 
     /**
      * Find all team statistics records for a given team within a date range
@@ -51,7 +51,7 @@ public interface TeamStatsRepository extends JpaRepository<TeamStatsModel, UUID>
      * @return List of TeamStats records ordered by date ascending
      */
     List<TeamStatsModel> findByTeamAndRecordDateBetweenOrderByRecordDateAsc(
-            TeamModel team, LocalDate fromDate, LocalDate toDate);
+            TeamModel team, OffsetDateTime fromDate, OffsetDateTime toDate);
 
     /**
      * Find all team statistics records for a specific team, category, and date range
@@ -63,7 +63,7 @@ public interface TeamStatsRepository extends JpaRepository<TeamStatsModel, UUID>
      * @return List of TeamStats records ordered by date ascending
      */
     List<TeamStatsModel> findByTeamAndCategoryAndRecordDateBetweenOrderByRecordDateAsc(
-            TeamModel team, CampsCategory category, LocalDate fromDate, LocalDate toDate);
+            TeamModel team, CampsCategory category, OffsetDateTime fromDate, OffsetDateTime toDate);
 
     /**
      * Find all category data for a specific team and date
@@ -76,7 +76,7 @@ public interface TeamStatsRepository extends JpaRepository<TeamStatsModel, UUID>
             "WHERE ts.team = :team AND ts.recordDate = :recordDate")
     List<TeamStatsModel> findAllCategoriesByTeamAndDate(
             @Param("team") TeamModel team,
-            @Param("recordDate") LocalDate recordDate);
+            @Param("recordDate") OffsetDateTime recordDate);
 
     /**
      * Find top performing categories across all teams for a specific date
@@ -89,7 +89,7 @@ public interface TeamStatsRepository extends JpaRepository<TeamStatsModel, UUID>
             "WHERE ts.recordDate = :recordDate " +
             "GROUP BY ts.category " +
             "ORDER BY avgRating DESC")
-    List<Object[]> findTopCategoriesAcrossAllTeams(@Param("recordDate") LocalDate recordDate);
+    List<Object[]> findTopCategoriesAcrossAllTeams(@Param("recordDate") OffsetDateTime recordDate);
 
     /**
      * Find teams with the highest average in a specific category
@@ -104,8 +104,8 @@ public interface TeamStatsRepository extends JpaRepository<TeamStatsModel, UUID>
             "ORDER BY ts.averageRating DESC")
     List<Object[]> findTeamsWithHighestAverageByCategory(
             @Param("category") CampsCategory category,
-            @Param("date") LocalDate date);
+            @Param("date") OffsetDateTime date);
 
     Optional<Object> findTopByTeamAndCategoryAndRecordDateLessThanOrderByRecordDateDesc(
-            TeamModel team, CampsCategory category, LocalDate date);
+            TeamModel team, CampsCategory category, OffsetDateTime date);
 }

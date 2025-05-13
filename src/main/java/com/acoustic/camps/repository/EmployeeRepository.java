@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -66,7 +66,7 @@ public interface EmployeeRepository extends JpaRepository<EmployeeModel, UUID> {
      * @param startDate The minimum start date
      * @return List of employees who joined after the specified date
      */
-    List<EmployeeModel> findByTeamAndStartDateGreaterThanEqual(TeamModel team, LocalDate startDate);
+    List<EmployeeModel> findByTeamAndStartDateGreaterThanEqual(TeamModel team, OffsetDateTime startDate);
 
     /**
      * Count employees by team

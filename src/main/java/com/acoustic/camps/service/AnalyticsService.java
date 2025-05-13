@@ -19,7 +19,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
@@ -46,7 +46,7 @@ public class AnalyticsService {
     private final TrendDataMapper trendDataMapper;
 
     @Transactional(readOnly = true)
-    public Map<CampsCategory, Double> getTeamAverages(UUID teamId, LocalDate date) {
+    public Map<CampsCategory, Double> getTeamAverages(UUID teamId, OffsetDateTime date) {
         Map<CampsCategory, Double> averages = new EnumMap<>(CampsCategory.class);
 
         TeamModel team = getTeamModel(teamId);
@@ -67,7 +67,7 @@ public class AnalyticsService {
 
 
     @Transactional(readOnly = true)
-    public List<TeamStats> getTeamStatsByDateRange(UUID teamId, LocalDate fromDate, LocalDate toDate) {
+    public List<TeamStats> getTeamStatsByDateRange(UUID teamId, OffsetDateTime fromDate, OffsetDateTime toDate) {
         TeamModel team = getTeamModel(teamId);
 
         return teamStatsMapper.toDTOList(teamStatsRepository.findByTeamAndRecordDateBetweenOrderByRecordDateAsc(
@@ -75,7 +75,7 @@ public class AnalyticsService {
     }
 
     @Transactional(readOnly = true)
-    public List<TrendData> getTrends(UUID employeeId, UUID teamId, CampsCategory category, LocalDate fromDate, LocalDate toDate) {
+    public List<TrendData> getTrends(UUID employeeId, UUID teamId, CampsCategory category, OffsetDateTime fromDate, OffsetDateTime toDate) {
         // Generate or retrieve trend data
         if (employeeId != null) {
             return trendDataMapper.toDTOList(trendDataRepository.findByEmployeeIdAndCategoryAndRecordDateBetweenOrderByRecordDateAsc(
@@ -97,14 +97,14 @@ public class AnalyticsService {
      * @param monthStart The first day of the month to generate trend data for
      */
     @Transactional
-    public void generateMonthlyTrendData(LocalDate monthStart) {
+    public void generateMonthlyTrendData(OffsetDateTime monthStart) {
         // Ensure we're using the first day of a month
         monthStart = monthStart.withDayOfMonth(1);
 
         // Define previous periods for comparison
-        LocalDate previousMonth = monthStart.minusMonths(1);
-        LocalDate previousQuarter = monthStart.minusMonths(3);
-        LocalDate previousYear = monthStart.minusYears(1);
+        OffsetDateTime previousMonth = monthStart.minusMonths(1);
+        OffsetDateTime previousQuarter = monthStart.minusMonths(3);
+        OffsetDateTime previousYear = monthStart.minusYears(1);
 
         // Process each CAMPS category
         for (CampsCategory category : CampsCategory.values()) {
@@ -134,8 +134,8 @@ public class AnalyticsService {
      * Helper method to generate trend data for a team
      */
     private void generateTeamTrendData(TeamModel team, CampsCategory category,
-                                       LocalDate currentMonth, LocalDate previousMonth,
-                                       LocalDate previousQuarter, LocalDate previousYear) {
+                                       OffsetDateTime currentMonth, OffsetDateTime previousMonth,
+                                       OffsetDateTime previousQuarter, OffsetDateTime previousYear) {
         // Get current month average
         Double currentAvg = teamStatsRepository
                 .findTopByTeamAndCategoryAndRecordDateLessThanEqualOrderByRecordDateDesc(
@@ -184,8 +184,8 @@ public class AnalyticsService {
      * Helper method to generate trend data for an employee
      */
     private void generateEmployeeTrendData(EmployeeModel employeeModel, CampsCategory category,
-                                           LocalDate currentMonth, LocalDate previousMonth,
-                                           LocalDate previousQuarter, LocalDate previousYear) {
+                                           OffsetDateTime currentMonth, OffsetDateTime previousMonth,
+                                           OffsetDateTime previousQuarter, OffsetDateTime previousYear) {
         // Get the current month rating
         EngagementRatingModel currentRating = ratingRepository
                 .findTopByEmployeeIdAndCategoryAndRatingDateLessThanEqualOrderByRatingDateDesc(
@@ -237,8 +237,8 @@ public class AnalyticsService {
      * Helper method to generate organization-wide trend data
      */
     private void generateOrganizationTrendData(CampsCategory category,
-                                               LocalDate currentMonth, LocalDate previousMonth,
-                                               LocalDate previousQuarter, LocalDate previousYear) {
+                                               OffsetDateTime currentMonth, OffsetDateTime previousMonth,
+                                               OffsetDateTime previousQuarter, OffsetDateTime previousYear) {
         // Calculate current month average across all employees
         Double currentAvg = calculateOrganizationAverage(category, currentMonth.plusMonths(1).minusDays(1));
 
@@ -267,7 +267,7 @@ public class AnalyticsService {
     /**
      * Helper method to calculate organization-wide average for a category
      */
-    private Double calculateOrganizationAverage(CampsCategory category, LocalDate asOfDate) {
+    private Double calculateOrganizationAverage(CampsCategory category, OffsetDateTime asOfDate) {
         List<EmployeeModel> employeeModels = employeeRepository.findAll();
         List<Double> ratings = new ArrayList<>();
 
@@ -348,6 +348,7 @@ public class AnalyticsService {
         return results;
     }
 */
+
     /**
      * Gets the most improved category for each employee within a date range
      *
@@ -356,7 +357,7 @@ public class AnalyticsService {
      * @return Map of employee IDs to Maps containing improvement details
      */
     @Transactional(readOnly = true)
-    public Map<UUID, Map<String, Object>> getMostImprovedCategories(LocalDate fromDate, LocalDate toDate) {
+    public Map<UUID, Map<String, Object>> getMostImprovedCategories(OffsetDateTime fromDate, OffsetDateTime toDate) {
         Map<UUID, Map<String, Object>> results = new HashMap<>();
         List<EmployeeModel> employeeModels = employeeRepository.findAll();
 

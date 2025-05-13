@@ -79,7 +79,7 @@ public interface EmployeeMapper {
     //@Mapping(target = "updatedAt", source = "updatedAt")
     // Skip circular references
     //@Mapping(target = "ratings", ignore = true)
-    @Mapping(target = "actionItems", ignore = true)
+    //@Mapping(target = "actionItems", ignore = true)
     EmployeeModel toEntity(Employee employeeDTO);
 
     /**
@@ -97,8 +97,8 @@ public interface EmployeeMapper {
     @Mapping(target = "department", source = "department")
     // Ignore all collections and circular references
     @Mapping(target = "manager", ignore = true)
-    @Mapping(target = "ratings", ignore = true)
-    @Mapping(target = "actionItems", ignore = true)
+    //@Mapping(target = "ratings", ignore = true)
+    //@Mapping(target = "actionItems", ignore = true)
     @Mapping(target = "startDate", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)

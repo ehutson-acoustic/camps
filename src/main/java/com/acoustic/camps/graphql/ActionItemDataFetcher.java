@@ -14,7 +14,7 @@ import com.netflix.graphql.dgs.DgsQuery;
 import com.netflix.graphql.dgs.InputArgument;
 import lombok.RequiredArgsConstructor;
 
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -92,7 +92,7 @@ public class ActionItemDataFetcher {
     @DgsMutation
     public ActionItem completeActionItem(
             @InputArgument String id,
-            @InputArgument LocalDate completedDate,
+            @InputArgument OffsetDateTime completedDate,
             @InputArgument String outcome,
             @InputArgument Integer ratingImpact) {
 

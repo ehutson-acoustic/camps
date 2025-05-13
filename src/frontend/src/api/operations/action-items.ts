@@ -1,7 +1,7 @@
 // src/api/operations/action-item.ts
-import { gql } from '@apollo/client';
-import { ActionItem, ActionItemInput, ActionStatus, DateRangeInput } from '@/types/schema.ts';
-import { EMPLOYEE_FIELDS } from './employee';
+import {gql} from '@apollo/client';
+import {ActionItem, ActionItemInput, ActionStatus, DateRangeInput} from '@/types/schema.ts';
+import {EMPLOYEE_FIELDS} from '@/api';
 
 // Fragment for common action item fields
 export const ACTION_ITEM_FIELDS = gql`
@@ -65,7 +65,7 @@ export const UPDATE_ACTION_ITEM = gql`
 `;
 
 export const COMPLETE_ACTION_ITEM = gql`
-    mutation CompleteActionItem($id: ID!, $completedDate: Date!, $outcome: String, $ratingImpact: Int) {
+    mutation CompleteActionItem($id: ID!, $completedDate: DateTime!, $outcome: String, $ratingImpact: Int) {
         completeActionItem(
             id: $id,
             completedDate: $completedDate,

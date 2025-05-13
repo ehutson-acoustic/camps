@@ -17,13 +17,11 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.proxy.HibernateProxy;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -47,7 +45,7 @@ public class EngagementRatingModel {
     private EmployeeModel employee;
 
     @Column(nullable = false)
-    private LocalDate ratingDate;
+    private OffsetDateTime ratingDate;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -65,19 +63,17 @@ public class EngagementRatingModel {
     private EmployeeModel createdBy;  // The manager who created this rating
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
+        createdAt = OffsetDateTime.now();
     }
 
     @Override
     public final boolean equals(Object o) {
-        if (o == null) return false;
-        if (this.getClass() != o.getClass()) {
-            return false;
-        }
+        if (this == o) return true;
+        if (o == null || this.getClass() != o.getClass()) return false;
         Class<?> oEffectiveClass = o instanceof HibernateProxy hp ? hp.getHibernateLazyInitializer().getPersistentClass() : o.getClass();
         Class<?> thisEffectiveClass = this instanceof HibernateProxy hp ? hp.getHibernateLazyInitializer().getPersistentClass() : this.getClass();
         if (thisEffectiveClass != oEffectiveClass) return false;

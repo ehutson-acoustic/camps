@@ -12,7 +12,7 @@ import com.netflix.graphql.dgs.DgsQuery;
 import com.netflix.graphql.dgs.InputArgument;
 import lombok.RequiredArgsConstructor;
 
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -30,13 +30,13 @@ public class AnalyticsDataFetcher {
     @DgsQuery
     public List<CategoryAverage> teamAverages(
             @InputArgument String teamId,
-            @InputArgument LocalDate date) {
+            @InputArgument OffsetDateTime date) {
 
         if (teamId == null) {
             throw new IllegalArgumentException("Team name must be provided");
         }
 
-        LocalDate targetDate = (date != null) ? date : LocalDate.now();
+        OffsetDateTime targetDate = (date != null) ? date : OffsetDateTime.now();
         Map<CampsCategory, Double> averages = analyticsService.getTeamAverages(UUID.fromString(teamId), targetDate);
 
         List<CategoryAverage> result = new ArrayList<>();
@@ -71,8 +71,8 @@ public class AnalyticsDataFetcher {
             @InputArgument CampsCategory category,
             @InputArgument TimePeriod timePeriod) {
 
-        LocalDate endDate = LocalDate.now();
-        LocalDate startDate = switch (timePeriod) {
+        OffsetDateTime endDate = OffsetDateTime.now();
+        OffsetDateTime startDate = switch (timePeriod) {
             case LAST_30_DAYS -> endDate.minusDays(30);
             case LAST_90_DAYS -> endDate.minusDays(90);
             case LAST_YEAR -> endDate.minusYears(1);
