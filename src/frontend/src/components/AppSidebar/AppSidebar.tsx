@@ -1,14 +1,19 @@
 import {useMemo} from 'react';
-import {useLocation} from 'react-router-dom';
-import {Activity} from 'lucide-react';
+import {Link, useLocation} from 'react-router-dom';
+import {Activity, Settings} from 'lucide-react';
 import {useGetEmployees, useGetTeams} from '@/api';
 import {
     Sidebar,
     SidebarContent,
+    SidebarFooter,
     SidebarGroup,
     SidebarGroupContent,
     SidebarGroupLabel,
     SidebarHeader,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
+    SidebarSeparator,
 } from '@/components/ui/sidebar';
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue,} from "@/components/ui/select";
 import {useTeamSelection} from './useTeamSelection';
@@ -88,6 +93,20 @@ const AppSidebar = () => {
                     </SidebarGroupContent>
                 </SidebarGroup>
             </SidebarContent>
+            <SidebarFooter className="p-4">
+                <SidebarSeparator className="mb-4">
+                    <SidebarMenu>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton asChild>
+                                <Link to="/admin" className="flex items-center gap-2">
+                                    <Settings className="h-4 w-4"/>
+                                    <span>Admin Dashboard</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                </SidebarSeparator>
+            </SidebarFooter>
         </Sidebar>
     );
 };

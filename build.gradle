@@ -69,10 +69,10 @@ tasks.named('test') {
 liquibase {
     activities {
         main {
-            changeLogFile  'src/main/resources/db/changelog/db.changelog-master.yaml'
-            url  'jdbc:postgresql://localhost:5432/camps'
-            username  'camps'
-            password  'camps'
+            changeLogFile 'src/main/resources/db/changelog/db.changelog-master.yaml'
+            url 'jdbc:postgresql://localhost:5432/camps'
+            username 'camps'
+            password 'camps'
         }
     }
 }
