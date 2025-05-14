@@ -37,35 +37,9 @@ import {
 } from 'lucide-react';
 import {ActionStatus, CampsCategory} from '@/types/schema';
 import {toast} from 'sonner';
+import {CAMPS_CATEGORIES} from "@/lib/CampsCategories.ts";
+import {useLogger} from "@/hooks/useLogger.ts";
 
-// Map CAMPS categories to friendly names and colors
-const CAMPS_CATEGORIES = {
-    [CampsCategory.CERTAINTY]: {
-        name: 'Certainty',
-        description: 'Confidence about the future and how things work',
-        color: 'bg-blue-500'
-    },
-    [CampsCategory.AUTONOMY]: {
-        name: 'Autonomy',
-        description: 'Control over decisions that affect your work',
-        color: 'bg-green-500'
-    },
-    [CampsCategory.MEANING]: {
-        name: 'Meaning',
-        description: 'Sense of purpose and fulfillment in work',
-        color: 'bg-purple-500'
-    },
-    [CampsCategory.PROGRESS]: {
-        name: 'Progress',
-        description: 'Moving forward and achieving goals',
-        color: 'bg-orange-500'
-    },
-    [CampsCategory.SOCIAL_INCLUSION]: {
-        name: 'Social Inclusion',
-        description: 'Feeling part of a supportive team/community',
-        color: 'bg-pink-500'
-    },
-};
 
 // Map action item status to friendly names and icons
 const ACTION_STATUS = {
@@ -111,6 +85,13 @@ const EmployeeDetail: React.FC = () => {
     // State for delete confirmation
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [actionItemToDelete, setActionItemToDelete] = useState<string | null>(null);
+
+    const {logger} = useLogger({
+        name: 'EmployeeDetail',
+        employeeId
+    });
+
+    logger.info("EmployeeDetail component mounted");
 
     const {
         data: employeeData,
@@ -450,7 +431,7 @@ const EmployeeDetail: React.FC = () => {
                                                         {/* Left side content */}
                                                         <div className="flex-1 min-w-0">
                                                             <Badge className={statusInfo.color}>
-                                                                <StatusIcon className="h-3 w-3 mr-1" />
+                                                                <StatusIcon className="h-3 w-3 mr-1"/>
                                                                 {statusInfo.name}
                                                             </Badge>
                                                             <div className="font-medium">{item.description}</div>
@@ -475,7 +456,7 @@ const EmployeeDetail: React.FC = () => {
                                                                     title="Edit action item"
                                                                     className="h-8 w-8"
                                                                 >
-                                                                    <Edit className="h-4 w-4" />
+                                                                    <Edit className="h-4 w-4"/>
                                                                 </Button>
 
                                                                 {isActionable && (
@@ -487,7 +468,7 @@ const EmployeeDetail: React.FC = () => {
                                                                             title="Mark as completed"
                                                                             className="h-8 w-8 text-green-600 hover:text-green-700"
                                                                         >
-                                                                            <Check className="h-4 w-4" />
+                                                                            <Check className="h-4 w-4"/>
                                                                         </Button>
 
                                                                         <Button
@@ -497,7 +478,7 @@ const EmployeeDetail: React.FC = () => {
                                                                             title="Cancel action item"
                                                                             className="h-8 w-8 text-orange-600 hover:text-orange-700"
                                                                         >
-                                                                            <Ban className="h-4 w-4" />
+                                                                            <Ban className="h-4 w-4"/>
                                                                         </Button>
                                                                     </>
                                                                 )}
@@ -509,7 +490,7 @@ const EmployeeDetail: React.FC = () => {
                                                                     title="Delete action item"
                                                                     className="h-8 w-8 text-red-600 hover:text-red-700"
                                                                 >
-                                                                    <Trash2 className="h-4 w-4" />
+                                                                    <Trash2 className="h-4 w-4"/>
                                                                 </Button>
                                                             </div>
                                                         </div>
@@ -529,7 +510,8 @@ const EmployeeDetail: React.FC = () => {
                                                         )}
                                                         {item.completedDate && (
                                                             <div>
-                                                                <span className="text-muted-foreground">Completed: </span>
+                                                                <span
+                                                                    className="text-muted-foreground">Completed: </span>
                                                                 {formatDate(item.completedDate)}
                                                             </div>
                                                         )}

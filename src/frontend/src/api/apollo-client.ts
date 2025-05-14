@@ -1,6 +1,7 @@
 import {ApolloClient, ApolloLink, HttpLink, InMemoryCache} from '@apollo/client';
+import {loggingLink} from "@/api/apollo-logging-link";
 
-// Set up HTTP link
+// Set up an HTTP link
 const httpLink = new HttpLink({
     uri: import.meta.env.VITE_GRAPHQL_API_URL ?? 'http://localhost:8080/graphql',
 });
@@ -9,7 +10,7 @@ const httpLink = new HttpLink({
 const errorLink = new ApolloLink((operation, forward) => {
     return forward(operation).map((response) => {
         if (response.errors && response.errors.length > 0) {
-            console.error('GraphQL Errors:', response.errors);
+            console.error('GraphQL errors:', response.errors);
         }
         return response;
     });
@@ -20,7 +21,7 @@ const cache = new InMemoryCache();
 
 // Initialize Apollo Client
 const apolloClient = new ApolloClient({
-    link: ApolloLink.from([errorLink, httpLink]),
+    link: ApolloLink.from([loggingLink, errorLink, httpLink]),
     cache,
     defaultOptions: {
         watchQuery: {

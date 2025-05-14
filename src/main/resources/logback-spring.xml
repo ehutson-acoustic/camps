@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <property name="LOGS" value="./docker/logs/"/>
+
+    <format>
+        <label>
+            <pattern>app=camps-backend,host=${HOSTNAME},level=%level,logger=%logger{36},traceId=%X{traceId:-unknown}
+            </pattern>
+        </label>
+        <message>
+            <pattern>{"timestamp":"%d{yyyy-MM-dd'T'HH:mm:ss.SSS'Z'}", "level":"%level", "thread":"%thread",
+                "logger":"%logger{36}", "message":"%message", "exception":"%exception", "userId":"%X{userId:-unknown}",
+                "requestId":"%X{requestId:-unknown}"}%n
+            </pattern>
+        </message>
+    </format>
+
+    <!-- Console appender for local development -->
+    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %highlight(%-5level) %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- File appender for local debugging/backup -->
+    <appender name="RollingFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOGS}/camps-logger.log</file>
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOGS}/archived/camps-logger-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>1MB</maxFileSize>
+            <maxHistory>7</maxHistory>
+            <totalSizeCap>10MB</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+
+
+    <!-- Logger for Spring -->
+    <logger name="org.springframework" level="info" additivity="false">
+        <appender-ref ref="Console"/>
+        <appender-ref ref="RollingFile"/>
+    </logger>
+
+    <!-- Logger for Hibernate -->
+    <logger name="org.hibernate" level="warn" additivity="false">
+        <appender-ref ref="Console"/>
+        <appender-ref ref="RollingFile"/>
+    </logger>
+
+    <!-- Logger for your application code -->
+    <logger name="com.acoustic.camps" level="debug" additivity="false">
+        <appender-ref ref="Console"/>
+        <appender-ref ref="RollingFile"/>
+    </logger>
+
+    <!-- Root logger -->
+    <root level="info">
+        <appender-ref ref="Console"/>
+        <appender-ref ref="RollingFile"/>
+    </root>
+</configuration>
