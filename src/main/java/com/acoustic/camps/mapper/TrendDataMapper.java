@@ -22,17 +22,9 @@ public interface TrendDataMapper {
      * @param trendData The model entity
      * @return The generated DTO
      */
-    @Mapping(target = "id", source = "id")
-    @Mapping(target = "employee", source = "employee", qualifiedByName = "employeeToEmployeeMinimal")
-    @Mapping(target = "team", source = "team", qualifiedByName = "teamToTeamMinimal")
-    @Mapping(target = "recordDate", source = "recordDate")
-    @Mapping(target = "category", source = "category")
-    @Mapping(target = "averageRating", source = "averageRating")
-    @Mapping(target = "monthOverMonthChange", source = "monthOverMonthChange")
-    @Mapping(target = "quarterOverQuarterChange", source = "quarterOverQuarterChange")
-    @Mapping(target = "yearOverYearChange", source = "yearOverYearChange")
-    //@Mapping(target = "createdAt", source = "createdAt")
-    TrendData toDTO(TrendDataModel trendData);
+    @Mapping(target = "employee", source = "employee", qualifiedByName = "toEmployeeBasic")
+    @Mapping(target = "team", source = "team", qualifiedByName = "toTeamBasic")
+    TrendData toTrendData(TrendDataModel trendData);
 
     /**
      * Convert a generated TrendData DTO to a model TrendData entity
@@ -41,8 +33,8 @@ public interface TrendDataMapper {
      * @return The model entity
      */
     @Mapping(target = "id", source = "id")
-    @Mapping(target = "employee", source = "employee", qualifiedByName = "employeeDTOToEmployeeMinimal")
-    @Mapping(target = "team", source = "team", qualifiedByName = "teamDTOToTeamMinimal")
+    @Mapping(target = "employee", source = "employee", qualifiedByName = "toEmployeeEntity")
+    @Mapping(target = "team", source = "team", qualifiedByName = "toTeamEntity")
     @Mapping(target = "recordDate", source = "recordDate")
     @Mapping(target = "category", source = "category")
     @Mapping(target = "averageRating", source = "averageRating")
@@ -50,7 +42,7 @@ public interface TrendDataMapper {
     @Mapping(target = "quarterOverQuarterChange", source = "quarterOverQuarterChange")
     @Mapping(target = "yearOverYearChange", source = "yearOverYearChange")
     //@Mapping(target = "createdAt", source = "createdAt")
-    TrendDataModel toEntity(TrendData trendDataDTO);
+    TrendDataModel toTrendDataEntity(TrendData trendDataDTO);
 
     /**
      * Convert a list of model TrendData entities to a list of generated TrendData DTOs
@@ -58,7 +50,7 @@ public interface TrendDataMapper {
      * @param trendDataList List of model entities
      * @return List of generated DTOs
      */
-    List<TrendData> toDTOList(List<TrendDataModel> trendDataList);
+    List<TrendData> toTrendDataList(List<TrendDataModel> trendDataList);
 
     /**
      * Convert a list of generated TrendData DTOs to a list of model TrendData entities
@@ -66,5 +58,5 @@ public interface TrendDataMapper {
      * @param trendDataDTOList List of generated DTOs
      * @return List of model entities
      */
-    List<TrendDataModel> toEntityList(List<TrendData> trendDataDTOList);
+    List<TrendDataModel> toTrendDataEntityList(List<TrendData> trendDataDTOList);
 }

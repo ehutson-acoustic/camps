@@ -33,23 +33,23 @@ public class EngagementRatingService {
 
     @Transactional(readOnly = true)
     public List<EngagementRating> getRatingsByEmployeeId(UUID employeeId) {
-        return mapper.toDTOList(ratingRepository.findByEmployeeIdOrderByRatingDateDesc(employeeId));
+        return mapper.toEngagementRatingList(ratingRepository.findByEmployeeIdOrderByRatingDateDesc(employeeId));
     }
 
     @Transactional(readOnly = true)
     public List<EngagementRating> getRatingsByEmployeeAndCategory(UUID employeeId, CampsCategory category) {
-        return mapper.toDTOList(ratingRepository.findByEmployeeIdAndCategoryOrderByRatingDateDesc(employeeId, category));
+        return mapper.toEngagementRatingList(ratingRepository.findByEmployeeIdAndCategoryOrderByRatingDateDesc(employeeId, category));
     }
 
     @Transactional(readOnly = true)
     public List<EngagementRating> getRatingsByDateRange(OffsetDateTime fromDate, OffsetDateTime toDate) {
-        return mapper.toDTOList(ratingRepository.findByRatingDateBetweenOrderByRatingDateDesc(fromDate, toDate));
+        return mapper.toEngagementRatingList(ratingRepository.findByRatingDateBetweenOrderByRatingDateDesc(fromDate, toDate));
     }
 
     @Transactional
     public EngagementRating addRating(EngagementRating rating) {
         // This is now our only method for adding ratings
-        EngagementRatingModel newRating = mapper.toEntity(rating);
+        EngagementRatingModel newRating = mapper.toEngagementRatingEntity(rating);
 
         // Ensure we're creating a new record
         newRating.setId(null);
@@ -62,7 +62,7 @@ public class EngagementRatingService {
         //        .orElseThrow(() -> new IllegalArgumentException("Employee not found with id: " + rating.getEmployee().getId()));
         //updateTeamStats(employee.getTeam(), rating.getCategory(), rating.getRatingDate());
 
-        return mapper.toDTO(savedRating);
+        return mapper.toEmployeeRating(savedRating);
     }
 
     /**

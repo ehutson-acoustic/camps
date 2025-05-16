@@ -5,7 +5,7 @@ import EmployeeDetail from '@/pages/EmployeeDetail';
 import NotFound from '@/pages/NotFound';
 import AdminDashboard from "@/pages/admin/AdminDashboard.tsx";
 import EmployeeAdmin from "@/pages/admin/EmployeeAdmin.tsx";
-import TeamAdmin from "@/components/layout/TeamAdmin.tsx";
+import TeamAdmin from "@/pages/admin/TeamAdmin.tsx";
 
 const router = createBrowserRouter([
     {

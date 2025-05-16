@@ -48,7 +48,7 @@ public class TeamStatsService {
                 .findByTeamAndRecordDateBetweenOrderByRecordDateAsc(team, fromDate, toDate);
 
         // Convert entities to DTOs using the mapper
-        return teamStatsMapper.toDTOList(teamStatsList);
+        return teamStatsMapper.toTeamStatsList(teamStatsList);
     }
 
 
@@ -70,7 +70,7 @@ public class TeamStatsService {
         List<TeamStatsModel> teamStatsList = teamStatsRepository
                 .findByTeamAndCategoryAndRecordDateBetweenOrderByRecordDateAsc(team, category, fromDate, toDate);
 
-        return teamStatsMapper.toDTOList(teamStatsList);
+        return teamStatsMapper.toTeamStatsList(teamStatsList);
     }
 
     /**
@@ -82,7 +82,7 @@ public class TeamStatsService {
     @Transactional
     public TeamStats saveTeamStats(TeamStats teamStatsDTO) {
         // Convert DTO to entity
-        TeamStatsModel teamStats = teamStatsMapper.toEntity(teamStatsDTO);
+        TeamStatsModel teamStats = teamStatsMapper.toTeamStatsEntity(teamStatsDTO);
 
         // Ensure a team exists
         if (teamStats.getTeam() == null || teamStats.getTeam().getId() == null) {
@@ -104,7 +104,7 @@ public class TeamStatsService {
         TeamStatsModel savedTeamStats = teamStatsRepository.save(teamStats);
 
         // Convert the saved entity back to DTO
-        return teamStatsMapper.toDTO(savedTeamStats);
+        return teamStatsMapper.toTeamStats(savedTeamStats);
     }
 
     /**
@@ -149,7 +149,7 @@ public class TeamStatsService {
     @Transactional
     public List<TeamStats> saveAllTeamStats(List<TeamStats> teamStatsDTOList) {
         // Convert DTOs to entities
-        List<TeamStatsModel> teamStatsList = teamStatsMapper.toEntityList(teamStatsDTOList);
+        List<TeamStatsModel> teamStatsList = teamStatsMapper.toTeamStatsEntityList(teamStatsDTOList);
 
         // Verify and update team references
         for (TeamStatsModel teamStats : teamStatsList) {
@@ -173,7 +173,7 @@ public class TeamStatsService {
         List<TeamStatsModel> savedTeamStatsList = teamStatsRepository.saveAll(teamStatsList);
 
         // Convert saved entities back to DTOs
-        return teamStatsMapper.toDTOList(savedTeamStatsList);
+        return teamStatsMapper.toTeamStatsList(savedTeamStatsList);
     }
 
     /**

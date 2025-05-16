@@ -70,7 +70,7 @@ public class AnalyticsService {
     public List<TeamStats> getTeamStatsByDateRange(UUID teamId, OffsetDateTime fromDate, OffsetDateTime toDate) {
         TeamModel team = getTeamModel(teamId);
 
-        return teamStatsMapper.toDTOList(teamStatsRepository.findByTeamAndRecordDateBetweenOrderByRecordDateAsc(
+        return teamStatsMapper.toTeamStatsList(teamStatsRepository.findByTeamAndRecordDateBetweenOrderByRecordDateAsc(
                 team, fromDate, toDate));
     }
 
@@ -78,12 +78,12 @@ public class AnalyticsService {
     public List<TrendData> getTrends(UUID employeeId, UUID teamId, CampsCategory category, OffsetDateTime fromDate, OffsetDateTime toDate) {
         // Generate or retrieve trend data
         if (employeeId != null) {
-            return trendDataMapper.toDTOList(trendDataRepository.findByEmployeeIdAndCategoryAndRecordDateBetweenOrderByRecordDateAsc(
+            return trendDataMapper.toTrendDataList(trendDataRepository.findByEmployeeIdAndCategoryAndRecordDateBetweenOrderByRecordDateAsc(
                     employeeId, category, fromDate, toDate));
         } else if (teamId != null) {
             TeamModel team = getTeamModel(teamId);
 
-            return trendDataMapper.toDTOList(trendDataRepository.findByTeamAndCategoryAndRecordDateBetweenOrderByRecordDateAsc(
+            return trendDataMapper.toTrendDataList(trendDataRepository.findByTeamAndCategoryAndRecordDateBetweenOrderByRecordDateAsc(
                     team, category, fromDate, toDate));
         } else {
             return Collections.emptyList();

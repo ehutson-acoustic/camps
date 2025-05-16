@@ -36,7 +36,7 @@ public class TeamService {
     @Transactional(readOnly = true)
     public List<Team> getAllTeams() {
         List<TeamModel> teams = teamRepository.findAll();
-        return teamMapper.toDTOList(teams);
+        return teamMapper.toTeamsList(teams);
     }
 
     /**
@@ -48,7 +48,7 @@ public class TeamService {
     @Transactional(readOnly = true)
     public Optional<Team> getTeamById(UUID id) {
         return teamRepository.findById(id)
-                .map(teamMapper::toDTO);
+                .map(teamMapper::toTeamDetailed);
     }
 
     /**
@@ -60,7 +60,7 @@ public class TeamService {
     @Transactional(readOnly = true)
     public Optional<Team> getTeamByName(String name) {
         return teamRepository.findByName(name)
-                .map(teamMapper::toDTO);
+                .map(teamMapper::toTeamDetailed);
     }
 
     /**
@@ -78,7 +78,7 @@ public class TeamService {
 
         team.setId(null); // Ensure we're creating a new team with generated ID
         TeamModel savedTeam = teamRepository.save(team);
-        return teamMapper.toDTO(savedTeam);
+        return teamMapper.toTeamDetailed(savedTeam);
     }
 
     /**
@@ -103,7 +103,7 @@ public class TeamService {
                     existingTeam.setDescription(team.getDescription());
 
                     TeamModel updatedTeam = teamRepository.save(existingTeam);
-                    return teamMapper.toDTO(updatedTeam);
+                    return teamMapper.toTeamDetailed(updatedTeam);
                 })
                 .orElseThrow(() -> new IllegalArgumentException(TEAM_NOT_FOUND_WITH_ID + id));
     }
@@ -131,39 +131,6 @@ public class TeamService {
     }
 
     /**
-     * Get all employees in a team
-     *
-     * @param teamId Team ID
-     * @return List of employee DTOs
-     */
-    @Transactional(readOnly = true)
-    public List<Employee> getTeamMembers(UUID teamId) {
-        TeamModel team = teamRepository.findById(teamId)
-                .orElseThrow(() -> new IllegalArgumentException(TEAM_NOT_FOUND_WITH_ID + teamId));
-
-        List<EmployeeModel> members = employeeRepository.findByTeam(team);
-        return employeeMapper.toDTOList(members);
-    }
-
-    /**
-     * Get employee distribution across teams
-     *
-     * @return Map of team name to employee count
-     */
-    @Transactional(readOnly = true)
-    public Map<String, Long> getEmployeeDistributionByTeam() {
-        List<Object[]> results = employeeRepository.countByTeam();
-
-        return results.stream()
-                .filter(row -> row[0] != null) // Filter out null teams
-                .collect(Collectors.toMap(
-                        row -> ((Team) row[0]).getName(), // Team name
-                        row -> (Long) row[1],             // Count
-                        Long::sum                   // Merge function in the case of duplicates
-                ));
-    }
-
-    /**
      * Search for teams by name or description
      *
      * @param searchTerm The search term
@@ -172,7 +139,7 @@ public class TeamService {
     @Transactional(readOnly = true)
     public List<Team> searchTeams(String searchTerm) {
         List<TeamModel> teams = teamRepository.findByNameOrDescriptionContainingIgnoreCase(searchTerm);
-        return teamMapper.toDTOList(teams);
+        return teamMapper.toTeamsList(teams);
     }
 
     /**

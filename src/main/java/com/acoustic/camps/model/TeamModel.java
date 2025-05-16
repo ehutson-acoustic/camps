@@ -19,9 +19,9 @@ import lombok.ToString;
 import org.hibernate.proxy.HibernateProxy;
 
 import java.time.OffsetDateTime;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -46,7 +46,7 @@ public class TeamModel {
     @OneToMany(mappedBy = "team")
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    private final Set<EmployeeModel> members = new HashSet<>();
+    private final List<EmployeeModel> members = new ArrayList<>();
 
     @Column(name = "created_at")
     private OffsetDateTime createdAt;

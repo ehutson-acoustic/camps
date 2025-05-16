@@ -17,9 +17,7 @@ import {Badge} from '@/components/ui/badge';
 import {Eye, MoreHorizontal, PencilIcon, Plus, Search, Trash2, UserRound, X} from 'lucide-react';
 import {Employee} from '@/types/schema';
 import {format} from 'date-fns';
-import EmployeeFormDialog from '@/components/admin/employee/EmployeeFormDialog';
-import DeleteEmployeeDialog from '@/components/admin/employee/DeleteEmployeeDialog';
-import EmployeeProfileDialog from '@/components/admin/employee/EmployeeProfileDialog';
+import {DeleteEmployeeDialog, EmployeeFormDialog, EmployeeProfileDialog} from '@/components/admin';
 
 const EmployeeAdmin: React.FC = () => {
     // State for search and filtering

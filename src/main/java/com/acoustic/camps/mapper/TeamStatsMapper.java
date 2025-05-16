@@ -23,15 +23,8 @@ public interface TeamStatsMapper {
      * @param teamStatsModel The model entity
      * @return The generated DTO
      */
-    @Mapping(target = "id", source = "id")
-    @Mapping(target = "team", source = "team", qualifiedByName = "teamToTeamMinimal")
-    @Mapping(target = "recordDate", source = "recordDate")
-    @Mapping(target = "category", source = "category")
-    @Mapping(target = "averageRating", source = "averageRating")
-    @Mapping(target = "previousAverageRating", source = "previousAverageRating")
-    @Mapping(target = "employeeCount", source = "employeeCount")
-    @Mapping(target = "createdAt", source = "createdAt")
-    TeamStats toDTO(TeamStatsModel teamStatsModel);
+    @Mapping(target = "team", source = "team", qualifiedByName = "toTeamBasic")
+    TeamStats toTeamStats(TeamStatsModel teamStatsModel);
 
     /**
      * Convert a generated TeamStats DTO to a model TeamStats entity
@@ -39,15 +32,8 @@ public interface TeamStatsMapper {
      * @param teamStatsDTO The generated DTO
      * @return The model entity
      */
-    @Mapping(target = "id", source = "id")
-    @Mapping(target = "team", source = "team", qualifiedByName = "teamDTOToTeamMinimal")
-    @Mapping(target = "recordDate", source = "recordDate")
-    @Mapping(target = "category", source = "category")
-    @Mapping(target = "averageRating", source = "averageRating")
-    @Mapping(target = "previousAverageRating", source = "previousAverageRating")
-    @Mapping(target = "employeeCount", source = "employeeCount")
-    @Mapping(target = "createdAt", source = "createdAt")
-    TeamStatsModel toEntity(TeamStats teamStatsDTO);
+    //@Mapping(target = "team", source = "team", qualifiedByName = "toTeamBasic")
+    TeamStatsModel toTeamStatsEntity(TeamStats teamStatsDTO);
 
     /**
      * Convert a list of model TeamStats entities to a list of generated TeamStats DTOs
@@ -55,7 +41,8 @@ public interface TeamStatsMapper {
      * @param teamStatsModelList List of model entities
      * @return List of generated DTOs
      */
-    List<TeamStats> toDTOList(List<TeamStatsModel> teamStatsModelList);
+    @Mapping(target = "team", source = "team", qualifiedByName = "toTeamBasic")
+    List<TeamStats> toTeamStatsList(List<TeamStatsModel> teamStatsModelList);
 
     /**
      * Convert a list of generated TeamStats DTOs to a list of model TeamStats entities
@@ -63,5 +50,5 @@ public interface TeamStatsMapper {
      * @param teamStatsDTOList List of generated DTOs
      * @return List of model entities
      */
-    List<TeamStatsModel> toEntityList(List<com.acoustic.camps.codegen.types.TeamStats> teamStatsDTOList);
+    List<TeamStatsModel> toTeamStatsEntityList(List<com.acoustic.camps.codegen.types.TeamStats> teamStatsDTOList);
 }

@@ -34,12 +34,12 @@ public class EmployeeService {
 
     @Transactional(readOnly = true)
     public List<Employee> getAllEmployees() {
-        return mapper.toDTOList(employeeRepository.findAll());
+        return mapper.toEmployeeStandardList(employeeRepository.findAll());
     }
 
     @Transactional(readOnly = true)
     public List<Employee> getEmployeesByTeamId(String teamId) {
-        return mapper.toDTOList(employeeRepository.findByTeam(getTeamModel(UUID.fromString(teamId))));
+        return mapper.toEmployeeStandardList(employeeRepository.findByTeam(getTeamModel(UUID.fromString(teamId))));
     }
 
     @Transactional(readOnly = true)
@@ -50,12 +50,12 @@ public class EmployeeService {
     @Transactional(readOnly = true)
     public Optional<Employee> getEmployeeById(UUID id) {
         return employeeRepository.findById(id)
-                .map(mapper::toDTO);
+                .map(mapper::toEmployeeDetailed);
     }
 
     @Transactional
     public Employee createEmployee(EmployeeModel employeeModel) {
-        return mapper.toDTO(employeeRepository.save(employeeModel));
+        return mapper.toEmployeeDetailed(employeeRepository.save(employeeModel));
     }
 
     @Transactional
@@ -68,7 +68,7 @@ public class EmployeeService {
                     employee.setDepartment(updatedEmployeeModel.getDepartment());
                     employee.setStartDate(updatedEmployeeModel.getStartDate());
                     employee.setManager(updatedEmployeeModel.getManager());
-                    return mapper.toDTO(employeeRepository.save(employee));
+                    return mapper.toEmployeeDetailed(employeeRepository.save(employee));
                 })
                 .orElseThrow(() -> new IllegalArgumentException("Employee not found with id: " + id));
     }
@@ -81,7 +81,7 @@ public class EmployeeService {
     @Transactional(readOnly = true)
     public List<EngagementRating> getCurrentRatings(UUID employeeId) {
         // Get the most recent rating for each category
-        return ratingMapper.toDTOList(Arrays.stream(CampsCategory.values())
+        return ratingMapper.toEngagementRatingList(Arrays.stream(CampsCategory.values())
                 .map(category -> ratingRepository.findTopByEmployeeIdAndCategoryOrderByRatingDateDesc(employeeId, category))
                 .filter(Optional::isPresent)
                 .map(Optional::get)
@@ -89,7 +89,7 @@ public class EmployeeService {
     }
 
     public List<Employee> getDirectReports(UUID managerId) {
-        return mapper.toDTOList(employeeRepository.findByManagerId(managerId));
+        return mapper.toEmployeeBasicList(employeeRepository.findByManagerId(managerId));
     }
 
     private TeamModel getTeamModel(UUID teamId) {

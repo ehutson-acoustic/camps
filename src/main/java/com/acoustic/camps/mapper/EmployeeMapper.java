@@ -9,6 +9,7 @@ import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -20,47 +21,26 @@ import java.util.Set;
         unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface EmployeeMapper {
 
-    /**
-     * Convert a model Employee entity to a generated Employee DTO
-     *
-     * @param employee The model entity
-     * @return The generated DTO
-     */
-    @Mapping(target = "id", source = "id")
-    @Mapping(target = "name", source = "name")
-    @Mapping(target = "position", source = "position")
-    @Mapping(target = "team", source = "team", qualifiedByName = "teamToTeamMinimal")
-    @Mapping(target = "department", source = "department")
-    @Mapping(target = "startDate", source = "startDate")
-    @Mapping(target = "manager", source = "manager")
-    //@Mapping(target = "createdAt", source = "createdAt")
-    //@Mapping(target = "updatedAt", source = "updatedAt")
-    // Skip circular references
-    //@Mapping(target = "ratings", ignore = true)
-    @Mapping(target = "actionItems", ignore = true)
-    Employee toDTO(EmployeeModel employee);
-
-    /**
-     * Convert a model Employee entity to a generated Employee DTO - minimal version
-     * This method is used when we need only basic employee info without circular references
-     *
-     * @param employee The model entity
-     * @return The generated DTO with minimal information
-     */
-    @Named("employeeToEmployeeMinimal")
-    @Mapping(target = "id", source = "id")
-    @Mapping(target = "name", source = "name")
-    @Mapping(target = "position", source = "position")
-    @Mapping(target = "team", source = "team", qualifiedByName = "teamToTeamMinimal")
-    @Mapping(target = "department", source = "department")
-    // Ignore all collections and circular references
+    @Named("toEmployeeBasic")
+    @Mapping(target = "team", ignore = true)
     @Mapping(target = "manager", ignore = true)
-    //@Mapping(target = "ratings", ignore = true)
+    @Mapping(target = "directReports", ignore = true)
     @Mapping(target = "actionItems", ignore = true)
     @Mapping(target = "startDate", ignore = true)
-    //@Mapping(target = "createdAt", ignore = true)
-    //@Mapping(target = "updatedAt", ignore = true)
-    Employee toEmployeeMinimal(EmployeeModel employee);
+    Employee toEmployeeBasic(EmployeeModel employee);
+
+    @Named("toEmployeeStandard")
+    @Mapping(target = "team", source = "team", qualifiedByName = "toTeamBasic")
+    @Mapping(target = "manager", source = "manager", qualifiedByName = "toEmployeeBasic")
+    //@Mapping(target = "directReports", ignore = true)
+    @Mapping(target = "actionItems", ignore = true)
+    Employee toEmployeeStandard(EmployeeModel employee);
+
+    @Named("toEmployeeDetailed")
+    @Mapping(target = "team", source = "team", qualifiedByName = "toTeamStandard")
+    @Mapping(target = "manager", source = "manager", qualifiedByName = "toEmployeeStandard")
+    //@Mapping(target = "directReports", source = "directReports", qualifiedByName = "toEmployeeBasicList")
+    Employee toEmployeeDetailed(EmployeeModel employee);
 
     /**
      * Convert a generated Employee DTO to a model Employee entity
@@ -68,10 +48,11 @@ public interface EmployeeMapper {
      * @param employeeDTO The generated DTO
      * @return The model entity
      */
+    @Named("toEmployeeEntity")
     @Mapping(target = "id", source = "id")
     @Mapping(target = "name", source = "name")
     @Mapping(target = "position", source = "position")
-    @Mapping(target = "team", source = "team", qualifiedByName = "teamDTOToTeamMinimal")
+    //@Mapping(target = "team", source = "team", qualifiedByName = "toTeamBasic")
     @Mapping(target = "department", source = "department")
     @Mapping(target = "startDate", source = "startDate")
     @Mapping(target = "manager", source = "manager")
@@ -80,29 +61,41 @@ public interface EmployeeMapper {
     // Skip circular references
     //@Mapping(target = "ratings", ignore = true)
     //@Mapping(target = "actionItems", ignore = true)
-    EmployeeModel toEntity(Employee employeeDTO);
+    EmployeeModel toEmployeeEntity(Employee employeeDTO);
 
-    /**
-     * Convert a generated Employee DTO to a model Employee entity - minimal version
-     * This method is used when we need only basic employee info without circular references
-     *
-     * @param employeeDTO The generated DTO
-     * @return The model entity with minimal information
-     */
-    @Named("employeeDTOToEmployeeMinimal")
-    @Mapping(target = "id", source = "id")
-    @Mapping(target = "name", source = "name")
-    @Mapping(target = "position", source = "position")
-    @Mapping(target = "team", source = "team", qualifiedByName = "teamDTOToTeamMinimal")
-    @Mapping(target = "department", source = "department")
-    // Ignore all collections and circular references
-    @Mapping(target = "manager", ignore = true)
-    //@Mapping(target = "ratings", ignore = true)
-    //@Mapping(target = "actionItems", ignore = true)
-    @Mapping(target = "startDate", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    EmployeeModel toEmployeeMinimal(Employee employeeDTO);
+
+    @Named("toEmployeeBasicList")
+    default List<Employee> toEmployeeBasicList(List<EmployeeModel> employees) {
+        if (employees == null) {
+            return Collections.emptyList();
+        }
+        return employees.stream()
+                .map(this::toEmployeeBasic)
+                .toList();
+    }
+
+    @Named("toEmployeeStandardList")
+    default List<Employee> toEmployeeStandardList(List<EmployeeModel> employees) {
+        if (employees == null) {
+            return Collections.emptyList();
+        }
+        return employees.stream()
+                .map(this::toEmployeeStandard)
+                .toList();
+    }
+
+    @Named("toEmployeeDetailedList")
+    default List<Employee> toEmployeeDetailedList(List<EmployeeModel> employees) {
+        if (employees == null) {
+            return Collections.emptyList();
+        }
+        return employees.stream()
+                .map(this::toEmployeeDetailed)
+                .toList();
+    }
+
+
+
 
     /**
      * Convert a list of model Employee entities to a list of generated Employee DTOs
@@ -110,7 +103,7 @@ public interface EmployeeMapper {
      * @param employeeList List of model entities
      * @return List of generated DTOs
      */
-    List<Employee> toDTOList(List<EmployeeModel> employeeList);
+    List<Employee> toEmployeeList(List<EmployeeModel> employeeList);
 
     /**
      * Convert a set of model Employee entities to a list of generated Employee DTOs
@@ -118,7 +111,7 @@ public interface EmployeeMapper {
      * @param employeeSet Set of model entities
      * @return List of generated DTOs
      */
-    List<Employee> toDTOList(Set<EmployeeModel> employeeSet);
+    List<Employee> toEmployeeList(Set<EmployeeModel> employeeSet);
 
     /**
      * Convert a list of generated Employee DTOs to a list of model Employee entities
@@ -126,7 +119,7 @@ public interface EmployeeMapper {
      * @param employeeDTOList List of generated DTOs
      * @return List of model entities
      */
-    List<EmployeeModel> toEntityList(List<Employee> employeeDTOList);
+    List<EmployeeModel> toEmployeeEntityList(List<Employee> employeeDTOList);
 
     /**
      * After mapping callback to handle self-references to avoid stack overflow

@@ -30,27 +30,27 @@ public class ActionItemService {
 
     @Transactional(readOnly = true)
     public List<ActionItem> getAllActionItems() {
-        return mapper.toDTOList(actionItemRepository.findAll());
+        return mapper.toActionItemList(actionItemRepository.findAll());
     }
 
     @Transactional(readOnly = true)
     public List<ActionItem> getActionItemsByEmployeeId(UUID employeeId) {
-        return mapper.toDTOList(actionItemRepository.findByEmployeeOrderByCreatedDateDesc(employeeId));
+        return mapper.toActionItemList(actionItemRepository.findByEmployeeOrderByCreatedDateDesc(employeeId));
     }
 
     @Transactional(readOnly = true)
     public List<ActionItem> getActionItemsByStatus(ActionStatus status) {
-        return mapper.toDTOList(actionItemRepository.findByStatusOrderByDueDateAsc(status));
+        return mapper.toActionItemList(actionItemRepository.findByStatusOrderByDueDateAsc(status));
     }
 
     @Transactional(readOnly = true)
     public List<ActionItem> getActionItemsByCategory(CampsCategory category) {
-        return mapper.toDTOList(actionItemRepository.findByCategoryOrderByCreatedDateDesc(category));
+        return mapper.toActionItemList(actionItemRepository.findByCategoryOrderByCreatedDateDesc(category));
     }
 
     @Transactional
     public ActionItem createActionItem(ActionItemModel actionItemModel) {
-        return mapper.toDTO(actionItemRepository.save(actionItemModel));
+        return mapper.toActionItem(actionItemRepository.save(actionItemModel));
     }
 
     @Transactional
@@ -62,7 +62,7 @@ public class ActionItemService {
                     item.setDueDate(updatedItem.getDueDate());
                     item.setStatus(updatedItem.getStatus());
                     // Don't update employee, createdDate, or completedDate
-                    return mapper.toDTO(actionItemRepository.save(item));
+                    return mapper.toActionItem(actionItemRepository.save(item));
                 })
                 .orElseThrow(() -> new IllegalArgumentException(ACTION_ITEM_NOT_FOUND_WITH_ID + id));
     }
@@ -75,7 +75,7 @@ public class ActionItemService {
                     item.setCompletedDate(completedDate);
                     item.setOutcome(outcome);
                     item.setRatingImpact(ratingImpact);
-                    return mapper.toDTO(actionItemRepository.save(item));
+                    return mapper.toActionItem(actionItemRepository.save(item));
                 })
                 .orElseThrow(() -> new IllegalArgumentException(ACTION_ITEM_NOT_FOUND_WITH_ID + id));
     }
@@ -86,7 +86,7 @@ public class ActionItemService {
                 .map(item -> {
                     item.setStatus(ActionStatus.CANCELLED);
                     item.setOutcome(reason);
-                    return mapper.toDTO(actionItemRepository.save(item));
+                    return mapper.toActionItem(actionItemRepository.save(item));
                 })
                 .orElseThrow(() -> new IllegalArgumentException(ACTION_ITEM_NOT_FOUND_WITH_ID + id));
     }
@@ -97,10 +97,10 @@ public class ActionItemService {
     }
 
     public List<ActionItem> getActionItemsByEmployeeAndStatus(UUID employeeId, List<ActionStatus> statuses) {
-        return mapper.toDTOList(actionItemRepository.findByIdAndStatusIn(employeeId, statuses));
+        return mapper.toActionItemList(actionItemRepository.findByIdAndStatusIn(employeeId, statuses));
     }
 
     public List<ActionItem> getActionItemsByDateRange(OffsetDateTime fromDate, OffsetDateTime toDate) {
-        return mapper.toDTOList(actionItemRepository.findByCreatedDateBetweenOrderByCreatedDateDesc(fromDate, toDate));
+        return mapper.toActionItemList(actionItemRepository.findByCreatedDateBetweenOrderByCreatedDateDesc(fromDate, toDate));
     }
 }

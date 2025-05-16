@@ -22,7 +22,9 @@ import lombok.ToString;
 import org.hibernate.proxy.HibernateProxy;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -68,7 +70,7 @@ public class EmployeeModel {
     @OneToMany(mappedBy = "employee")
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    private final Set<EngagementRatingModel> ratings = new HashSet<>();
+    private final List<EngagementRatingModel> ratings = new ArrayList<>();
 
     @OneToMany(mappedBy = "employee")
     @ToString.Exclude

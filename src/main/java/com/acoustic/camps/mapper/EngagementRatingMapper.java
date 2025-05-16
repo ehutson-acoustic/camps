@@ -2,10 +2,8 @@ package com.acoustic.camps.mapper;
 
 import com.acoustic.camps.codegen.types.EngagementRating;
 import com.acoustic.camps.model.EngagementRatingModel;
-import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
 import org.mapstruct.ReportingPolicy;
 
 import java.util.List;
@@ -25,15 +23,9 @@ public interface EngagementRatingMapper {
      * @param engagementRating The model entity
      * @return The generated DTO
      */
-    @Mapping(target = "id", source = "id")
-    @Mapping(target = "employee", source = "employee", qualifiedByName = "employeeToEmployeeMinimal")
-    @Mapping(target = "ratingDate", source = "ratingDate")
-    @Mapping(target = "category", source = "category")
-    @Mapping(target = "rating", source = "rating")
-    @Mapping(target = "notes", source = "notes")
-    @Mapping(target = "createdBy", source = "createdBy", qualifiedByName = "employeeToEmployeeMinimal")
-    @Mapping(target = "createdAt", source = "createdAt")
-    EngagementRating toDTO(EngagementRatingModel engagementRating);
+    @Mapping(target = "employee", source = "employee", qualifiedByName = "toEmployeeBasic")
+    @Mapping(target = "createdBy", source = "createdBy", qualifiedByName = "toEmployeeBasic")
+    EngagementRating toEmployeeRating(EngagementRatingModel engagementRating);
 
     /**
      * Convert a generated EngagementRating DTO to a model EngagementRating entity
@@ -41,15 +33,9 @@ public interface EngagementRatingMapper {
      * @param engagementRatingDTO The generated DTO
      * @return The model entity
      */
-    @Mapping(target = "id", source = "id")
-    @Mapping(target = "employee", source = "employee", qualifiedByName = "employeeDTOToEmployeeMinimal")
-    @Mapping(target = "ratingDate", source = "ratingDate")
-    @Mapping(target = "category", source = "category")
-    @Mapping(target = "rating", source = "rating")
-    @Mapping(target = "notes", source = "notes")
-    @Mapping(target = "createdBy", source = "createdBy", qualifiedByName = "employeeDTOToEmployeeMinimal")
-    @Mapping(target = "createdAt", source = "createdAt")
-    EngagementRatingModel toEntity(EngagementRating engagementRatingDTO);
+    @Mapping(target = "employee", source = "employee", qualifiedByName = "toEmployeeEntity")
+    @Mapping(target = "createdBy", source = "createdBy", qualifiedByName = "toEmployeeEntity")
+    EngagementRatingModel toEngagementRatingEntity(EngagementRating engagementRatingDTO);
 
     /**
      * Convert a list of model EngagementRating entities to a list of generated EngagementRating DTOs
@@ -57,7 +43,7 @@ public interface EngagementRatingMapper {
      * @param engagementRatingList List of model entities
      * @return List of generated DTOs
      */
-    List<EngagementRating> toDTOList(List<EngagementRatingModel> engagementRatingList);
+    List<EngagementRating> toEngagementRatingList(List<EngagementRatingModel> engagementRatingList);
 
     /**
      * Convert a set of model EngagementRating entities to a list of generated EngagementRating DTOs
@@ -65,7 +51,7 @@ public interface EngagementRatingMapper {
      * @param engagementRatingSet Set of model entities
      * @return List of generated DTOs
      */
-    List<EngagementRating> toDTOList(Set<EngagementRatingModel> engagementRatingSet);
+    List<EngagementRating> toEngagementRatingList(Set<EngagementRatingModel> engagementRatingSet);
 
     /**
      * Convert a list of generated EngagementRating DTOs to a list of model EngagementRating entities
@@ -73,5 +59,5 @@ public interface EngagementRatingMapper {
      * @param engagementRatingDTOList List of generated DTOs
      * @return List of model entities
      */
-    List<EngagementRatingModel> toEntityList(List<EngagementRating> engagementRatingDTOList);
+    List<EngagementRatingModel> toEngagementRatingEntityList(List<EngagementRating> engagementRatingDTOList);
 }
