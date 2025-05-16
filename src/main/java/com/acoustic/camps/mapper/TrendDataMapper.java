@@ -3,7 +3,6 @@ package com.acoustic.camps.mapper;
 import com.acoustic.camps.codegen.types.TrendData;
 import com.acoustic.camps.model.TrendDataModel;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 
 import java.util.List;
@@ -12,7 +11,7 @@ import java.util.List;
  * MapStruct mapper for converting between model TrendData entities and generated DTO objects
  */
 @Mapper(componentModel = "spring",
-        uses = {CommonTypeMapper.class, EmployeeMapper.class, TeamMapper.class},
+        uses = {CommonTypeMapper.class, BasicEmployeeMapper.class, BasicTeamMapper.class},
         unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface TrendDataMapper {
 
@@ -22,8 +21,6 @@ public interface TrendDataMapper {
      * @param trendData The model entity
      * @return The generated DTO
      */
-    @Mapping(target = "employee", source = "employee", qualifiedByName = "toEmployeeBasic")
-    @Mapping(target = "team", source = "team", qualifiedByName = "toTeamBasic")
     TrendData toTrendData(TrendDataModel trendData);
 
     /**
@@ -32,16 +29,6 @@ public interface TrendDataMapper {
      * @param trendDataDTO The generated DTO
      * @return The model entity
      */
-    @Mapping(target = "id", source = "id")
-    @Mapping(target = "employee", source = "employee", qualifiedByName = "toEmployeeEntity")
-    @Mapping(target = "team", source = "team", qualifiedByName = "toTeamEntity")
-    @Mapping(target = "recordDate", source = "recordDate")
-    @Mapping(target = "category", source = "category")
-    @Mapping(target = "averageRating", source = "averageRating")
-    @Mapping(target = "monthOverMonthChange", source = "monthOverMonthChange")
-    @Mapping(target = "quarterOverQuarterChange", source = "quarterOverQuarterChange")
-    @Mapping(target = "yearOverYearChange", source = "yearOverYearChange")
-    //@Mapping(target = "createdAt", source = "createdAt")
     TrendDataModel toTrendDataEntity(TrendData trendDataDTO);
 
     /**

@@ -1,10 +1,8 @@
 package com.acoustic.camps.service;
 
-import com.acoustic.camps.codegen.types.Employee;
 import com.acoustic.camps.codegen.types.Team;
 import com.acoustic.camps.mapper.EmployeeMapper;
 import com.acoustic.camps.mapper.TeamMapper;
-import com.acoustic.camps.model.EmployeeModel;
 import com.acoustic.camps.model.TeamModel;
 import com.acoustic.camps.repository.EmployeeRepository;
 import com.acoustic.camps.repository.TeamRepository;
@@ -13,10 +11,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -48,7 +44,7 @@ public class TeamService {
     @Transactional(readOnly = true)
     public Optional<Team> getTeamById(UUID id) {
         return teamRepository.findById(id)
-                .map(teamMapper::toTeamDetailed);
+                .map(teamMapper::toTeam);
     }
 
     /**
@@ -60,7 +56,7 @@ public class TeamService {
     @Transactional(readOnly = true)
     public Optional<Team> getTeamByName(String name) {
         return teamRepository.findByName(name)
-                .map(teamMapper::toTeamDetailed);
+                .map(teamMapper::toTeam);
     }
 
     /**
@@ -78,7 +74,7 @@ public class TeamService {
 
         team.setId(null); // Ensure we're creating a new team with generated ID
         TeamModel savedTeam = teamRepository.save(team);
-        return teamMapper.toTeamDetailed(savedTeam);
+        return teamMapper.toTeam(savedTeam);
     }
 
     /**
@@ -103,7 +99,7 @@ public class TeamService {
                     existingTeam.setDescription(team.getDescription());
 
                     TeamModel updatedTeam = teamRepository.save(existingTeam);
-                    return teamMapper.toTeamDetailed(updatedTeam);
+                    return teamMapper.toTeam(updatedTeam);
                 })
                 .orElseThrow(() -> new IllegalArgumentException(TEAM_NOT_FOUND_WITH_ID + id));
     }

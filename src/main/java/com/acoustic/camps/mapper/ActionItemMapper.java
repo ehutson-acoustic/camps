@@ -3,7 +3,6 @@ package com.acoustic.camps.mapper;
 import com.acoustic.camps.codegen.types.ActionItem;
 import com.acoustic.camps.model.ActionItemModel;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 
 import java.util.List;
@@ -12,7 +11,7 @@ import java.util.List;
  * MapStruct mapper for converting between model ActionItem entities and generated DTO objects
  */
 @Mapper(componentModel = "spring",
-        uses = {CommonTypeMapper.class, EmployeeMapper.class},
+        uses = {CommonTypeMapper.class, BasicEmployeeMapper.class},
         unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface ActionItemMapper {
 
@@ -22,7 +21,6 @@ public interface ActionItemMapper {
      * @param actionItem The model entity
      * @return The generated DTO
      */
-    @Mapping(target = "employee", source = "employee", qualifiedByName = "toEmployeeBasic")
     ActionItem toActionItem(ActionItemModel actionItem);
 
     /**
@@ -31,7 +29,6 @@ public interface ActionItemMapper {
      * @param actionItemDTO The generated DTO
      * @return The model entity
      */
-    @Mapping(target = "employee", source = "employee")
     ActionItemModel toActionItemEntity(ActionItem actionItemDTO);
 
     /**
@@ -40,15 +37,6 @@ public interface ActionItemMapper {
      * @param actionItemList List of model entities
      * @return List of generated DTOs
      */
-    @Mapping(target = "employee", source = "employee", qualifiedByName = "toEmployeeBasic")
     List<ActionItem> toActionItemList(List<ActionItemModel> actionItemList);
-
-    /**
-     * Convert a list of generated ActionItem DTOs to a list of model ActionItem entities
-     *
-     * @param actionItemDTOList List of generated DTOs
-     * @return List of model entities
-     */
-    List<ActionItemModel> toActionItemEntityList(List<ActionItem> actionItemDTOList);
 
 }

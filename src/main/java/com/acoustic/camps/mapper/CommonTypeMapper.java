@@ -129,6 +129,12 @@ public class CommonTypeMapper {
         return Double.valueOf(value);
     }
 
+    /**
+     * Converts a {@link LocalDateTime} to an {@link OffsetDateTime}.
+     *
+     * @param value the {@link LocalDateTime} to convert
+     * @return the converted {@link OffsetDateTime}, or {@code null} if the input is {@code null}
+     */
     public OffsetDateTime map(LocalDateTime value) {
         if (value == null) {
             return null;
@@ -136,6 +142,12 @@ public class CommonTypeMapper {
         return value.atOffset(OffsetDateTime.now().getOffset());
     }
 
+    /**
+     * Converts an {@link OffsetDateTime} to a {@link LocalDateTime}.
+     *
+     * @param value the {@link OffsetDateTime} to convert
+     * @return the converted {@link LocalDateTime}, or {@code null} if the input is {@code null}
+     */
     public LocalDateTime map(OffsetDateTime value) {
         if (value == null) {
             return null;

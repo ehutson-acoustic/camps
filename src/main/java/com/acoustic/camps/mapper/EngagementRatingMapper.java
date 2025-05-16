@@ -3,7 +3,6 @@ package com.acoustic.camps.mapper;
 import com.acoustic.camps.codegen.types.EngagementRating;
 import com.acoustic.camps.model.EngagementRatingModel;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 
 import java.util.List;
@@ -13,7 +12,7 @@ import java.util.Set;
  * MapStruct mapper for converting between model EngagementRating entities and generated DTO objects
  */
 @Mapper(componentModel = "spring",
-        uses = {CommonTypeMapper.class, EmployeeMapper.class},
+        uses = {CommonTypeMapper.class, BasicEmployeeMapper.class},
         unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface EngagementRatingMapper {
 
@@ -23,8 +22,6 @@ public interface EngagementRatingMapper {
      * @param engagementRating The model entity
      * @return The generated DTO
      */
-    @Mapping(target = "employee", source = "employee", qualifiedByName = "toEmployeeBasic")
-    @Mapping(target = "createdBy", source = "createdBy", qualifiedByName = "toEmployeeBasic")
     EngagementRating toEmployeeRating(EngagementRatingModel engagementRating);
 
     /**
@@ -33,8 +30,6 @@ public interface EngagementRatingMapper {
      * @param engagementRatingDTO The generated DTO
      * @return The model entity
      */
-    @Mapping(target = "employee", source = "employee", qualifiedByName = "toEmployeeEntity")
-    @Mapping(target = "createdBy", source = "createdBy", qualifiedByName = "toEmployeeEntity")
     EngagementRatingModel toEngagementRatingEntity(EngagementRating engagementRatingDTO);
 
     /**

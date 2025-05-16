@@ -34,12 +34,12 @@ public class EmployeeService {
 
     @Transactional(readOnly = true)
     public List<Employee> getAllEmployees() {
-        return mapper.toEmployeeStandardList(employeeRepository.findAll());
+        return mapper.toEmployeeList(employeeRepository.findAll());
     }
 
     @Transactional(readOnly = true)
     public List<Employee> getEmployeesByTeamId(String teamId) {
-        return mapper.toEmployeeStandardList(employeeRepository.findByTeam(getTeamModel(UUID.fromString(teamId))));
+        return mapper.toEmployeeList(employeeRepository.findByTeam(getTeamModel(UUID.fromString(teamId))));
     }
 
     @Transactional(readOnly = true)
@@ -50,12 +50,12 @@ public class EmployeeService {
     @Transactional(readOnly = true)
     public Optional<Employee> getEmployeeById(UUID id) {
         return employeeRepository.findById(id)
-                .map(mapper::toEmployeeDetailed);
+                .map(mapper::toEmployee);
     }
 
     @Transactional
     public Employee createEmployee(EmployeeModel employeeModel) {
-        return mapper.toEmployeeDetailed(employeeRepository.save(employeeModel));
+        return mapper.toEmployee(employeeRepository.save(employeeModel));
     }
 
     @Transactional
@@ -68,7 +68,7 @@ public class EmployeeService {
                     employee.setDepartment(updatedEmployeeModel.getDepartment());
                     employee.setStartDate(updatedEmployeeModel.getStartDate());
                     employee.setManager(updatedEmployeeModel.getManager());
-                    return mapper.toEmployeeDetailed(employeeRepository.save(employee));
+                    return mapper.toEmployee(employeeRepository.save(employee));
                 })
                 .orElseThrow(() -> new IllegalArgumentException("Employee not found with id: " + id));
     }
@@ -89,7 +89,7 @@ public class EmployeeService {
     }
 
     public List<Employee> getDirectReports(UUID managerId) {
-        return mapper.toEmployeeBasicList(employeeRepository.findByManagerId(managerId));
+        return mapper.toEmployeeList(employeeRepository.findByManagerId(managerId));
     }
 
     private TeamModel getTeamModel(UUID teamId) {

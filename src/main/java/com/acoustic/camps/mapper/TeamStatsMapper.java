@@ -13,7 +13,7 @@ import java.util.List;
  * MapStruct mapper for converting between model TeamStats entities and generated DTO objects
  */
 @Mapper(componentModel = "spring",
-        uses = {CommonTypeMapper.class, TeamMapper.class},
+        uses = {CommonTypeMapper.class, BasicTeamMapper.class},
         unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface TeamStatsMapper {
 
@@ -23,7 +23,6 @@ public interface TeamStatsMapper {
      * @param teamStatsModel The model entity
      * @return The generated DTO
      */
-    @Mapping(target = "team", source = "team", qualifiedByName = "toTeamBasic")
     TeamStats toTeamStats(TeamStatsModel teamStatsModel);
 
     /**
@@ -32,7 +31,6 @@ public interface TeamStatsMapper {
      * @param teamStatsDTO The generated DTO
      * @return The model entity
      */
-    //@Mapping(target = "team", source = "team", qualifiedByName = "toTeamBasic")
     TeamStatsModel toTeamStatsEntity(TeamStats teamStatsDTO);
 
     /**
