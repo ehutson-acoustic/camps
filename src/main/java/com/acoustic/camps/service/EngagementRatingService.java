@@ -57,11 +57,6 @@ public class EngagementRatingService {
         // Save the new rating
         EngagementRatingModel savedRating = ratingRepository.save(newRating);
 
-        // Update team statistics
-        //EmployeeModel employee = employeeRepository.findById(UUID.fromString(rating.getEmployee().getId()))
-        //        .orElseThrow(() -> new IllegalArgumentException("Employee not found with id: " + rating.getEmployee().getId()));
-        //updateTeamStats(employee.getTeam(), rating.getCategory(), rating.getRatingDate());
-
         return mapper.toEmployeeRating(savedRating);
     }
 

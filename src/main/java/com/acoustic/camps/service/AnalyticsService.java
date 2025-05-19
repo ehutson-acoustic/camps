@@ -1,9 +1,10 @@
 package com.acoustic.camps.service;
 
 import com.acoustic.camps.codegen.types.CampsCategory;
+import com.acoustic.camps.codegen.types.CategoryAverage;
+import com.acoustic.camps.codegen.types.Team;
 import com.acoustic.camps.codegen.types.TeamStats;
 import com.acoustic.camps.codegen.types.TrendData;
-import com.acoustic.camps.mapper.TeamStatsMapper;
 import com.acoustic.camps.mapper.TrendDataMapper;
 import com.acoustic.camps.model.EmployeeModel;
 import com.acoustic.camps.model.EngagementRatingModel;
@@ -15,11 +16,15 @@ import com.acoustic.camps.repository.EngagementRatingRepository;
 import com.acoustic.camps.repository.TeamRepository;
 import com.acoustic.camps.repository.TeamStatsRepository;
 import com.acoustic.camps.repository.TrendDataRepository;
+import com.acoustic.camps.util.time.ComparisonPeriod;
+import com.acoustic.camps.util.time.DateInterval;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.Timestamp;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
@@ -29,6 +34,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+
+import static com.acoustic.camps.util.time.ComparisonPeriod.calculatePreviousPeriod;
 
 /**
  * Service for analyzing trends and generating reports
@@ -42,36 +49,113 @@ public class AnalyticsService {
     private final TeamStatsRepository teamStatsRepository;
     private final TrendDataRepository trendDataRepository;
     private final TeamRepository teamRepository;
-    private final TeamStatsMapper teamStatsMapper;
     private final TrendDataMapper trendDataMapper;
 
+    @Transactional(readOnly = true)
+    public List<CategoryAverage> getTeamAveragesWithComparison(UUID teamId, OffsetDateTime date) {
+        OffsetDateTime targetDate = (date != null) ? date : OffsetDateTime.now();
+        OffsetDateTime previousDate = calculatePreviousPeriod(targetDate, ComparisonPeriod.WEEK);
+
+        // Get all category averages
+        List<Object[]> categoryAverages = ratingRepository.calculateAllCategoryAveragesWithPrevious(teamId, targetDate, previousDate);
+
+        // Process results
+        Map<CampsCategory, CategoryAverage> averagesByCategory = new EnumMap<>(CampsCategory.class);
+
+        // Initialize all categories
+        for (CampsCategory category : CampsCategory.values()) {
+            CategoryAverage avg = new CategoryAverage();
+            avg.setCategory(category);
+            avg.setAverageRating(0.0);
+            averagesByCategory.put(category, avg);
+        }
+
+        // Update with the actual values
+        for (Object[] row : categoryAverages) {
+            CampsCategory category = CampsCategory.valueOf((String) row[0]);
+            double currentAvg = row[1] != null ? ((Number) row[1]).doubleValue() : 0.0;
+            Double previousAvg = row[2] != null ? ((Number) row[2]).doubleValue() : null;
+
+            CategoryAverage avg = averagesByCategory.get(category);
+            avg.setAverageRating(currentAvg);
+            avg.setPreviousAverageRating(previousAvg);
+            avg.setChange(previousAvg != null ? currentAvg - previousAvg : null);
+        }
+
+        return new ArrayList<>(averagesByCategory.values());
+    }
+
+    /**
+     * Get team averages for a specific date
+     *
+     * @param teamId Team ID
+     * @param date   Date for which to calculate averages
+     * @return Map of CampsCategory to average rating
+     */
     @Transactional(readOnly = true)
     public Map<CampsCategory, Double> getTeamAverages(UUID teamId, OffsetDateTime date) {
         Map<CampsCategory, Double> averages = new EnumMap<>(CampsCategory.class);
 
-        TeamModel team = getTeamModel(teamId);
+        List<Object[]> results = ratingRepository.calculateTeamAveragesByCategory(teamId, date);
 
+        // Initialize all categories to 0.0
         for (CampsCategory category : CampsCategory.values()) {
-            TeamStatsModel stats = teamStatsRepository.findTopByTeamAndCategoryAndRecordDateLessThanEqualOrderByRecordDateDesc(
-                    team, category, date).orElse(null);
+            averages.put(category, 0.0);
+        }
 
-            if (stats != null) {
-                averages.put(category, stats.getAverageRating());
-            } else {
-                averages.put(category, 0.0);
+        // Populate averages from the results
+        for (Object[] result : results) {
+            CampsCategory category = (CampsCategory) result[0];
+            Double average = (Double) result[1];
+
+            if (average != null) {
+                averages.put(category, average);
             }
         }
 
         return averages;
     }
 
-
+    /**
+     * Get team statistics for a specific date range
+     *
+     * @param teamId   Team ID
+     * @param fromDate Start date (inclusive)
+     * @param toDate   End date (inclusive)
+     * @return List of TeamStats objects
+     */
     @Transactional(readOnly = true)
     public List<TeamStats> getTeamStatsByDateRange(UUID teamId, OffsetDateTime fromDate, OffsetDateTime toDate) {
+        List<TeamStats> result = new ArrayList<>();
         TeamModel team = getTeamModel(teamId);
 
-        return teamStatsMapper.toTeamStatsList(teamStatsRepository.findByTeamAndRecordDateBetweenOrderByRecordDateAsc(
-                team, fromDate, toDate));
+        // Determine the appropriate interval based on the date range
+        DateInterval interval = DateInterval.determineInterval(fromDate, toDate);
+
+        // Get aggregated stats from the database
+        List<Object[]> statsData = ratingRepository.calculateTeamStatsByInterval(teamId, fromDate, toDate, interval.name());
+
+        // Map the results to TeamStats objects
+        for (Object[] row : statsData) {
+            OffsetDateTime date = ((Timestamp) row[0]).toLocalDateTime().atOffset(ZoneOffset.UTC);
+            CampsCategory category = CampsCategory.valueOf((String) row[1]);
+            double averageRating = ((Number) row[2]).doubleValue();
+            Integer employeeCount = ((Number) row[3]).intValue();
+
+
+            TeamStats stats = new TeamStats();
+            stats.setTeam(new Team());
+            stats.getTeam().setId(team.getId().toString());
+            stats.getTeam().setName(team.getName());
+            stats.setRecordDate(date);
+            stats.setCategory(category);
+            stats.setAverageRating(averageRating);
+            stats.setEmployeeCount(employeeCount);
+
+            result.add(stats);
+        }
+
+        return result;
     }
 
     @Transactional(readOnly = true)
@@ -347,7 +431,8 @@ public class AnalyticsService {
 
         return results;
     }
-*/
+
+     */
 
     /**
      * Gets the most improved category for each employee within a date range

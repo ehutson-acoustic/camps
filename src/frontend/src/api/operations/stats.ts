@@ -71,7 +71,7 @@ export const GET_TEAM_AVERAGES = gql`
 export const GET_TRENDS = gql`
     query GetTrends(
         $employeeId: ID,
-        $teamName: String,
+        $teamId: ID,
         $category: CampsCategory,
         $timePeriod: TimePeriod!
     ) {
@@ -93,7 +93,7 @@ export interface GetTeamStatsData {
 }
 
 export interface GetTeamStatsVars {
-    teamName: string;
+    teamId: string;
     dateRange?: DateRangeInput;
 }
 
@@ -102,7 +102,7 @@ export interface GetTeamAveragesData {
 }
 
 export interface GetTeamAveragesVars {
-    teamName: string;
+    teamId: string;
     date?: string;
 }
 
@@ -112,7 +112,7 @@ export interface GetTrendsData {
 
 export interface GetTrendsVars {
     employeeId?: string;
-    teamName?: string;
+    teamId?: string;
     category?: CampsCategory;
     timePeriod: TimePeriod;
 }

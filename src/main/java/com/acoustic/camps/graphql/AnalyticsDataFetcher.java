@@ -33,9 +33,12 @@ public class AnalyticsDataFetcher {
             @InputArgument OffsetDateTime date) {
 
         if (teamId == null) {
-            throw new IllegalArgumentException("Team name must be provided");
+            throw new IllegalArgumentException("Team id must be provided");
         }
 
+        return analyticsService.getTeamAveragesWithComparison(UUID.fromString(teamId), date);
+
+        /*
         OffsetDateTime targetDate = (date != null) ? date : OffsetDateTime.now();
         Map<CampsCategory, Double> averages = analyticsService.getTeamAverages(UUID.fromString(teamId), targetDate);
 
@@ -44,11 +47,13 @@ public class AnalyticsDataFetcher {
             CategoryAverage avg = new CategoryAverage();
             avg.setCategory(entry.getKey());
             avg.setAverageRating(entry.getValue());
-            // TODO Previous rating would need additional query - simplified for now
+            // We could potentially calculate previous averages too for comparison
             result.add(avg);
         }
 
         return result;
+
+         */
     }
 
     @DgsQuery
