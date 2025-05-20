@@ -18,8 +18,10 @@ const RECALCULATE_TRENDS = gql`
     }
 `;
 
+const ALL_TEAMS_VALUE = "all_teams";
+
 const TrendManagement: React.FC = () => {
-    const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
+    const [selectedTeamId, setSelectedTeamId] = useState<string>(ALL_TEAMS_VALUE);
     const {data: teamsData, loading: teamsLoading} = useGetTeams();
 
     const [recalculateTrends, {loading}] = useMutation(RECALCULATE_TRENDS, {
@@ -44,7 +46,7 @@ const TrendManagement: React.FC = () => {
     const handleRecalculate = () => {
         recalculateTrends({
             variables: {
-                teamId: selectedTeamId
+                teamId: selectedTeamId === ALL_TEAMS_VALUE ? null : selectedTeamId
             }
         });
     };
@@ -67,15 +69,15 @@ const TrendManagement: React.FC = () => {
                             <div className="space-y-2">
                                 <Label className="text-sm font-medium">Select Team</Label>
                                 <Select
-                                    value={selectedTeamId ?? ""}
-                                    onValueChange={(value) => setSelectedTeamId(value || null)}
+                                    value={selectedTeamId}
+                                    onValueChange={(value) => setSelectedTeamId(value)}
                                     disabled={teamsLoading || loading}
                                 >
                                     <SelectTrigger>
-                                        <SelectValue placeholder="All Teams"/>
+                                        <SelectValue placeholder="Choose a team"/>
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="">All Teams</SelectItem>
+                                        <SelectItem value={ALL_TEAMS_VALUE}>All Teams</SelectItem>
                                         {teamsData?.teams?.map(team => (
                                             <SelectItem key={team.id} value={team.id}>
                                                 {team.name}

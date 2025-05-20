@@ -11,7 +11,7 @@ import {
     SidebarTrigger
 } from '@/components/ui/sidebar';
 import {Separator} from '@/components/ui/separator';
-import {Building2, Home, Settings, UserRound} from 'lucide-react';
+import {Building2, Home, Settings, UserRound, TrendingUp} from 'lucide-react';
 
 interface AdminLayoutProps {
     children: React.ReactNode;
@@ -73,6 +73,17 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({children}) => {
                                             <Link to="/admin/teams">
                                                 <Building2 className="h-4 w-4"/>
                                                 <span>Teams</span>
+                                            </Link>
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+                                    <SidebarMenuItem>
+                                        <SidebarMenuButton
+                                            asChild
+                                            isActive={isActive('/admin/trendmgmt')}
+                                        >
+                                            <Link to="/admin/trendmgmt">
+                                                <TrendingUp className="h-4 w-4"/>
+                                                <span>Trend Management</span>
                                             </Link>
                                         </SidebarMenuButton>
                                     </SidebarMenuItem>

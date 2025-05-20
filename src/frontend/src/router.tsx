@@ -7,6 +7,7 @@ import AdminDashboard from "@/pages/admin/AdminDashboard.tsx";
 import EmployeeAdmin from "@/pages/admin/EmployeeAdmin.tsx";
 import TeamAdmin from "@/pages/admin/TeamAdmin.tsx";
 import TeamDashboard from "@/pages/TeamDashboard.tsx";
+import TrendManagement from "@/pages/admin/TrendManagement.tsx";
 
 const router = createBrowserRouter([
     {
@@ -32,6 +33,10 @@ const router = createBrowserRouter([
     {
         path: '/admin/teams',
         element: <TeamAdmin/>
+    },
+    {
+        path: '/admin/trendmgmt',
+        element: <TrendManagement />
     },
     {
         path: '*',
