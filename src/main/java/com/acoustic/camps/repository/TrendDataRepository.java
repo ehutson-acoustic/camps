@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -61,6 +62,15 @@ public interface TrendDataRepository extends JpaRepository<TrendDataModel, UUID>
      */
     List<TrendDataModel> findByTeamAndCategoryAndRecordDateBetweenOrderByRecordDateAsc(
             TeamModel team, CampsCategory category, OffsetDateTime fromDate, OffsetDateTime toDate);
+
+
+    /**
+     * Find the latest trend data for a specific team
+     *
+     * @param team The team
+     * @return The latest trend data for the team, or an empty Optional if none found
+     */
+    Optional<TrendDataModel> findTopByTeamOrderByCreatedAtDesc(TeamModel team);
 
     /**
      * Find organization-wide trends for a specific category and date range

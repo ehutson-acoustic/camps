@@ -217,7 +217,7 @@ public class AnalyticsService {
     /**
      * Helper method to generate trend data for a team
      */
-    private void generateTeamTrendData(TeamModel team, CampsCategory category,
+    public void generateTeamTrendData(TeamModel team, CampsCategory category,
                                        OffsetDateTime currentMonth, OffsetDateTime previousMonth,
                                        OffsetDateTime previousQuarter, OffsetDateTime previousYear) {
         // Get current month average

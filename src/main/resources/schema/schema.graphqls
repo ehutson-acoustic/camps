@@ -91,6 +91,11 @@ type CategoryAverage {
     change: Float
 }
 
+type CalculationResult {
+    success: Boolean!
+    message: String
+}
+
 input EmployeeInput {
     name: String!
     position: String
@@ -206,6 +211,9 @@ type Mutation {
     ): ActionItem!
     cancelActionItem(id: ID!, reason: String): ActionItem!
     deleteActionItem(id: ID!): Boolean!
+
+    # Recalculate trends for a specific team or all teams if teamId is null
+    recalculateTrends(teamId: ID): CalculationResult!
 }
 
 # Custom scalars
