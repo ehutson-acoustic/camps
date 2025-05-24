@@ -2,9 +2,7 @@ package com.acoustic.camps.service;
 
 import com.acoustic.camps.codegen.types.CampsCategory;
 import com.acoustic.camps.model.TeamModel;
-import com.acoustic.camps.model.TrendDataModel;
 import com.acoustic.camps.repository.TeamRepository;
-import com.acoustic.camps.repository.TrendDataRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -27,61 +25,6 @@ public class TrendCalculationService {
 
     private final AnalyticsService analyticsService;
     private final TeamRepository teamRepository;
-    private final TrendDataRepository trendDataRepository;
-
-    /**
-     * Method called at application startup to check and calculate trends if needed
-     */
-    public void checkAndCalculateOnStartup() {
-        log.info("Checking trend data on application startup");
-        OffsetDateTime now = OffsetDateTime.now();
-        List<TeamModel> teams = teamRepository.findAll();
-
-        for (TeamModel team : teams) {
-            checkAndCalculateForTeamIfNeeded(team, now);
-        }
-    }
-
-    /**
-     * Daily scheduled task to calculate trend data for all teams
-     * Runs at 3 AM every day
-     */
-    @Scheduled(cron = "0 0 3 * * ?") // Every day at 3 AM
-    public void calculateDailyTrends() {
-        log.info("Starting scheduled daily trend calculation");
-        OffsetDateTime now = OffsetDateTime.now();
-        List<TeamModel> teams = teamRepository.findAll();
-
-        for (TeamModel team : teams) {
-            checkAndCalculateForTeamIfNeeded(team, now);
-        }
-
-        log.info("Scheduled trend calculation check completed");
-    }
-
-    /**
-     * Check if calculation is needed and trigger it if so
-     */
-    private void checkAndCalculateForTeamIfNeeded(TeamModel team, OffsetDateTime now) {
-        try {
-            // Find the most recent trend data for this team
-            OffsetDateTime lastCalculation = trendDataRepository.findTopByTeamOrderByCreatedAtDesc(team)
-                    .map(TrendDataModel::getCreatedAt)
-                    .orElse(null);
-
-            boolean needsCalculation = lastCalculation == null ||
-                    ChronoUnit.HOURS.between(lastCalculation, now) >= 24;
-
-            if (needsCalculation) {
-                log.info("Trend calculation needed for team {}, triggering async calculation", team.getName());
-                calculateTeamTrendsAsync(team.getId());
-            } else {
-                log.debug("No trend calculation needed for team {}", team.getName());
-            }
-        } catch (Exception e) {
-            log.error("Error checking trend calculation for team {}: {}", team.getId(), e.getMessage(), e);
-        }
-    }
 
     /**
      * Admin API to trigger calculation for a specific team regardless of time since last calculation
@@ -142,4 +85,6 @@ public class TrendCalculationService {
             return CompletableFuture.completedFuture(false);
         }
     }
+
+
 }

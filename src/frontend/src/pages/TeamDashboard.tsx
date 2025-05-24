@@ -169,6 +169,278 @@ const TeamDashboard: React.FC = () => {
         );
     }
 
+    function getTeamMemberAverages() {
+        if (employeesLoading) {
+            return <CardContent><Skeleton className="h-60 w-full"/></CardContent>;
+        }
+        return <CardContent>
+            {employeesData?.employees && employeesData.employees.length > 0 ? (
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Position</TableHead>
+                            <TableHead className="text-center">Certainty</TableHead>
+                            <TableHead className="text-center">Autonomy</TableHead>
+                            <TableHead className="text-center">Meaning</TableHead>
+                            <TableHead className="text-center">Progress</TableHead>
+                            <TableHead className="text-center">Social</TableHead>
+                            <TableHead className="text-center">Average</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {employeesData.employees.map(employee => {
+                            // Calculate average rating if an employee has ratings
+                            const currentRatings = employee.currentRatings || [];
+                            const hasRatings = currentRatings.length > 0;
+                            const avgRating = hasRatings
+                                ? currentRatings.reduce((sum, r) => sum + r.rating, 0) / currentRatings.length
+                                : null;
+
+                            return (
+                                <TableRow key={employee.id}>
+                                    <TableCell className="font-medium">{employee.name}</TableCell>
+                                    <TableCell>{employee.position ?? '-'}</TableCell>
+
+                                    {/* CAMPS Rating Cells */}
+                                    {Object.values(CampsCategory).map(category => {
+                                        const rating = currentRatings.find(r => r.category === category)?.rating;
+                                        return (
+                                            <TableCell key={category} className="text-center">
+                                                {rating ? (
+                                                    <Badge
+                                                        variant={rating >= 7 ? "default" : rating >= 4 ? "secondary" : "destructive"}>
+                                                        {rating}
+                                                    </Badge>
+                                                ) : (
+                                                    <span
+                                                        className="text-xs text-muted-foreground">N/A</span>
+                                                )}
+                                            </TableCell>
+                                        );
+                                    })}
+
+                                    {/* Average Rating */}
+                                    <TableCell className="text-center">
+                                        {avgRating ? (
+                                            <Badge
+                                                variant={avgRating >= 7 ? "default" : avgRating >= 4 ? "secondary" : "destructive"}>
+                                                {avgRating.toFixed(1)}
+                                            </Badge>
+                                        ) : (
+                                            <span
+                                                className="text-xs text-muted-foreground">N/A</span>
+                                        )}
+                                    </TableCell>
+
+                                    <TableCell className="text-right">
+                                        <Link
+                                            to={`/employee/${employee.id}`}
+                                            className="flex items-center justify-end gap-1 text-sm text-primary hover:underline"
+                                        >
+                                            Details
+                                            <ChevronRight className="h-4 w-4"/>
+                                        </Link>
+                                    </TableCell>
+                                </TableRow>
+                            );
+                        })}
+                    </TableBody>
+                </Table>
+            ) : (
+                <div className="text-center py-8">
+                    <p className="text-muted-foreground">No team members found.</p>
+                </div>
+            )}
+        </CardContent>;
+    }
+
+    function renderNeedsImprovementCard() {
+        return <Card>
+            <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5 text-amber-500"/>
+                    Needs Improvement
+                </CardTitle>
+            </CardHeader>
+            <CardContent>
+                {insights?.needsImprovement.map(category => (
+                    <div key={category.category} className="mb-4 last:mb-0">
+                        <div className="flex justify-between mb-1">
+                                                <span
+                                                    className="font-medium">{CAMPS_CATEGORIES[category.category].name}</span>
+                            <span>{category.averageRating.toFixed(1)}</span>
+                        </div>
+                        <div className="w-full bg-muted rounded-full h-2.5">
+                            <div
+                                className="bg-amber-500 h-2.5 rounded-full"
+                                style={{width: `${category.averageRating * 10}%`}}
+                            ></div>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            {CAMPS_CATEGORIES[category.category].description}
+                        </p>
+                    </div>
+                ))}
+            </CardContent>
+        </Card>;
+    }
+
+    function renderMostImprovedCategories() {
+        return <Card>
+            <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-green-500"/>
+                    Most Improved
+                </CardTitle>
+            </CardHeader>
+            <CardContent>
+                {insights?.mostImproved.length ? (
+                    insights.mostImproved.map(category => (
+                        <div key={category.category} className="mb-4 last:mb-0">
+                            <div className="flex justify-between mb-1">
+                                                    <span
+                                                        className="font-medium">{CAMPS_CATEGORIES[category.category].name}</span>
+                                <span className="text-green-600 flex items-center">
+                            <ArrowUpIcon className="h-3 w-3 mr-1"/>
+                                    {category.change?.toFixed(1)}
+                          </span>
+                            </div>
+                            <div className="w-full bg-muted rounded-full h-2.5">
+                                <div
+                                    className="bg-green-500 h-2.5 rounded-full"
+                                    style={{width: `${category.averageRating * 10}%`}}
+                                ></div>
+                            </div>
+                        </div>
+                    ))
+                ) : (
+                    <p className="text-muted-foreground text-sm">No improvements in the current
+                        period.</p>
+                )}
+            </CardContent>
+        </Card>;
+    }
+
+    function renderDecliningAreasCard() {
+        return <Card>
+            <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center gap-2">
+                    <Activity className="h-5 w-5 text-red-500"/>
+                    Declining Areas
+                </CardTitle>
+            </CardHeader>
+            <CardContent>
+                {insights?.declining.length ? (
+                    insights.declining.map(category => (
+                        <div key={category.category} className="mb-4 last:mb-0">
+                            <div className="flex justify-between mb-1">
+                                                    <span
+                                                        className="font-medium">{CAMPS_CATEGORIES[category.category].name}</span>
+                                <span className="text-red-600 flex items-center">
+                            <ArrowDownIcon className="h-3 w-3 mr-1"/>
+                                    {Math.abs(category.change ?? 0).toFixed(1)}
+                          </span>
+                            </div>
+                            <div className="w-full bg-muted rounded-full h-2.5">
+                                <div
+                                    className="bg-red-500 h-2.5 rounded-full"
+                                    style={{width: `${category.averageRating * 10}%`}}
+                                ></div>
+                            </div>
+                        </div>
+                    ))
+                ) : (
+                    <p className="text-muted-foreground text-sm">No declining metrics in the current
+                        period.</p>
+                )}
+            </CardContent>
+        </Card>;
+    }
+
+    function renderTrendsForCategory() {
+        return <Card>
+            <CardHeader>
+                <CardTitle>
+                    {CAMPS_CATEGORIES[selectedCategory].name} Trend
+                </CardTitle>
+                <CardDescription>
+                    {CAMPS_CATEGORIES[selectedCategory].description}
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="h-[400px]">
+                {trendsLoading ? (
+                    <div className="h-full flex items-center justify-center">
+                        <p>Loading trends...</p>
+                    </div>
+                ) : trendChartData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={trendChartData}>
+                            <CartesianGrid strokeDasharray="3 3"/>
+                            <XAxis dataKey="date"/>
+                            <YAxis domain={[0, 10]}/>
+                            <Tooltip/>
+                            <Legend/>
+                            <Line
+                                type="monotone"
+                                dataKey="value"
+                                name={CAMPS_CATEGORIES[selectedCategory].name}
+                                stroke="#8884d8"
+                                activeDot={{r: 8}}
+                            />
+                        </LineChart>
+                    </ResponsiveContainer>
+                ) : (
+                    <div className="h-full flex items-center justify-center">
+                        <p>No trend data available for this period.</p>
+                    </div>
+                )}
+            </CardContent>
+        </Card>;
+    }
+
+    function renderMonthlyChangesForCategory() {
+        return <Card>
+            <CardHeader>
+                <CardTitle>Monthly Changes</CardTitle>
+                <CardDescription>
+                    Month-over-month changes for {CAMPS_CATEGORIES[selectedCategory].name}
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="h-[300px]">
+                {trendsLoading ? (
+                    <div className="h-full flex items-center justify-center">
+                        <p>Loading trends...</p>
+                    </div>
+                ) : trendChartData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={trendChartData}>
+                            <CartesianGrid strokeDasharray="3 3"/>
+                            <XAxis dataKey="date"/>
+                            <YAxis/>
+                            <Tooltip/>
+                            <Legend/>
+                            <Bar
+                                dataKey="change"
+                                name="Monthly Change"
+                                fill="#8884d8" // Default fill color
+                            >
+                                {trendChartData.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={entry.fillColor}/>
+                                ))}
+                            </Bar>
+                        </BarChart>
+                    </ResponsiveContainer>
+                ) : (
+                    <div className="h-full flex items-center justify-center">
+                        <p>No change data available for this period.</p>
+                    </div>
+                )}
+            </CardContent>
+        </Card>;
+    }
+
     return (
         <DashboardLayout>
             <div className="space-y-6">
@@ -253,104 +525,13 @@ const TeamDashboard: React.FC = () => {
                         {/* Insights Cards */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             {/* Needs Improvement */}
-                            <Card>
-                                <CardHeader className="pb-2">
-                                    <CardTitle className="text-lg flex items-center gap-2">
-                                        <AlertTriangle className="h-5 w-5 text-amber-500"/>
-                                        Needs Improvement
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    {insights?.needsImprovement.map(category => (
-                                        <div key={category.category} className="mb-4 last:mb-0">
-                                            <div className="flex justify-between mb-1">
-                                                <span
-                                                    className="font-medium">{CAMPS_CATEGORIES[category.category].name}</span>
-                                                <span>{category.averageRating.toFixed(1)}</span>
-                                            </div>
-                                            <div className="w-full bg-muted rounded-full h-2.5">
-                                                <div
-                                                    className="bg-amber-500 h-2.5 rounded-full"
-                                                    style={{width: `${category.averageRating * 10}%`}}
-                                                ></div>
-                                            </div>
-                                            <p className="text-xs text-muted-foreground mt-1">
-                                                {CAMPS_CATEGORIES[category.category].description}
-                                            </p>
-                                        </div>
-                                    ))}
-                                </CardContent>
-                            </Card>
+                            {renderNeedsImprovementCard()}
 
                             {/* Most Improved */}
-                            <Card>
-                                <CardHeader className="pb-2">
-                                    <CardTitle className="text-lg flex items-center gap-2">
-                                        <TrendingUp className="h-5 w-5 text-green-500"/>
-                                        Most Improved
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    {insights?.mostImproved.length ? (
-                                        insights.mostImproved.map(category => (
-                                            <div key={category.category} className="mb-4 last:mb-0">
-                                                <div className="flex justify-between mb-1">
-                                                    <span
-                                                        className="font-medium">{CAMPS_CATEGORIES[category.category].name}</span>
-                                                    <span className="text-green-600 flex items-center">
-                            <ArrowUpIcon className="h-3 w-3 mr-1"/>
-                                                        {category.change?.toFixed(1)}
-                          </span>
-                                                </div>
-                                                <div className="w-full bg-muted rounded-full h-2.5">
-                                                    <div
-                                                        className="bg-green-500 h-2.5 rounded-full"
-                                                        style={{width: `${category.averageRating * 10}%`}}
-                                                    ></div>
-                                                </div>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <p className="text-muted-foreground text-sm">No improvements in the current
-                                            period.</p>
-                                    )}
-                                </CardContent>
-                            </Card>
+                            {renderMostImprovedCategories()}
 
                             {/* Declining */}
-                            <Card>
-                                <CardHeader className="pb-2">
-                                    <CardTitle className="text-lg flex items-center gap-2">
-                                        <Activity className="h-5 w-5 text-red-500"/>
-                                        Declining Areas
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    {insights?.declining.length ? (
-                                        insights.declining.map(category => (
-                                            <div key={category.category} className="mb-4 last:mb-0">
-                                                <div className="flex justify-between mb-1">
-                                                    <span
-                                                        className="font-medium">{CAMPS_CATEGORIES[category.category].name}</span>
-                                                    <span className="text-red-600 flex items-center">
-                            <ArrowDownIcon className="h-3 w-3 mr-1"/>
-                                                        {Math.abs(category.change ?? 0).toFixed(1)}
-                          </span>
-                                                </div>
-                                                <div className="w-full bg-muted rounded-full h-2.5">
-                                                    <div
-                                                        className="bg-red-500 h-2.5 rounded-full"
-                                                        style={{width: `${category.averageRating * 10}%`}}
-                                                    ></div>
-                                                </div>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <p className="text-muted-foreground text-sm">No declining metrics in the current
-                                            period.</p>
-                                    )}
-                                </CardContent>
-                            </Card>
+                            {renderDecliningAreasCard()}
                         </div>
                     </TabsContent>
 
@@ -385,83 +566,9 @@ const TeamDashboard: React.FC = () => {
                             </div>
                         </div>
 
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>
-                                    {CAMPS_CATEGORIES[selectedCategory].name} Trend
-                                </CardTitle>
-                                <CardDescription>
-                                    {CAMPS_CATEGORIES[selectedCategory].description}
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="h-[400px]">
-                                {trendsLoading ? (
-                                    <div className="h-full flex items-center justify-center">
-                                        <p>Loading trends...</p>
-                                    </div>
-                                ) : trendChartData.length > 0 ? (
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <LineChart data={trendChartData}>
-                                            <CartesianGrid strokeDasharray="3 3"/>
-                                            <XAxis dataKey="date"/>
-                                            <YAxis domain={[0, 10]}/>
-                                            <Tooltip/>
-                                            <Legend/>
-                                            <Line
-                                                type="monotone"
-                                                dataKey="value"
-                                                name={CAMPS_CATEGORIES[selectedCategory].name}
-                                                stroke="#8884d8"
-                                                activeDot={{r: 8}}
-                                            />
-                                        </LineChart>
-                                    </ResponsiveContainer>
-                                ) : (
-                                    <div className="h-full flex items-center justify-center">
-                                        <p>No trend data available for this period.</p>
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
+                        {renderTrendsForCategory()}
 
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Monthly Changes</CardTitle>
-                                <CardDescription>
-                                    Month-over-month changes for {CAMPS_CATEGORIES[selectedCategory].name}
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="h-[300px]">
-                                {trendsLoading ? (
-                                    <div className="h-full flex items-center justify-center">
-                                        <p>Loading trends...</p>
-                                    </div>
-                                ) : trendChartData.length > 0 ? (
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <BarChart data={trendChartData}>
-                                            <CartesianGrid strokeDasharray="3 3"/>
-                                            <XAxis dataKey="date"/>
-                                            <YAxis/>
-                                            <Tooltip/>
-                                            <Legend/>
-                                            <Bar
-                                                dataKey="change"
-                                                name="Monthly Change"
-                                                fill="#8884d8" // Default fill color
-                                            >
-                                                {trendChartData.map((entry, index) => (
-                                                    <Cell key={`cell-${index}`} fill={entry.fillColor}/>
-                                                ))}
-                                            </Bar>
-                                        </BarChart>
-                                    </ResponsiveContainer>
-                                ) : (
-                                    <div className="h-full flex items-center justify-center">
-                                        <p>No change data available for this period.</p>
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
+                        {renderMonthlyChangesForCategory()}
                     </TabsContent>
 
                     {/* Team Members Tab */}
@@ -473,89 +580,7 @@ const TeamDashboard: React.FC = () => {
                                     Overview of all team members and their current CAMPS ratings
                                 </CardDescription>
                             </CardHeader>
-                            <CardContent>
-                                {employeesLoading ? (
-                                    <Skeleton className="h-60 w-full"/>
-                                ) : employeesData?.employees && employeesData.employees.length > 0 ? (
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow>
-                                                <TableHead>Name</TableHead>
-                                                <TableHead>Position</TableHead>
-                                                <TableHead className="text-center">Certainty</TableHead>
-                                                <TableHead className="text-center">Autonomy</TableHead>
-                                                <TableHead className="text-center">Meaning</TableHead>
-                                                <TableHead className="text-center">Progress</TableHead>
-                                                <TableHead className="text-center">Social</TableHead>
-                                                <TableHead className="text-center">Average</TableHead>
-                                                <TableHead className="text-right">Actions</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {employeesData.employees.map(employee => {
-                                                // Calculate average rating if employee has ratings
-                                                const currentRatings = employee.currentRatings || [];
-                                                const hasRatings = currentRatings.length > 0;
-                                                const avgRating = hasRatings
-                                                    ? currentRatings.reduce((sum, r) => sum + r.rating, 0) / currentRatings.length
-                                                    : null;
-
-                                                return (
-                                                    <TableRow key={employee.id}>
-                                                        <TableCell className="font-medium">{employee.name}</TableCell>
-                                                        <TableCell>{employee.position ?? '-'}</TableCell>
-
-                                                        {/* CAMPS Rating Cells */}
-                                                        {Object.values(CampsCategory).map(category => {
-                                                            const rating = currentRatings.find(r => r.category === category)?.rating;
-                                                            return (
-                                                                <TableCell key={category} className="text-center">
-                                                                    {rating ? (
-                                                                        <Badge
-                                                                            variant={rating >= 7 ? "default" : rating >= 4 ? "secondary" : "destructive"}>
-                                                                            {rating}
-                                                                        </Badge>
-                                                                    ) : (
-                                                                        <span
-                                                                            className="text-xs text-muted-foreground">N/A</span>
-                                                                    )}
-                                                                </TableCell>
-                                                            );
-                                                        })}
-
-                                                        {/* Average Rating */}
-                                                        <TableCell className="text-center">
-                                                            {avgRating ? (
-                                                                <Badge
-                                                                    variant={avgRating >= 7 ? "default" : avgRating >= 4 ? "secondary" : "destructive"}>
-                                                                    {avgRating.toFixed(1)}
-                                                                </Badge>
-                                                            ) : (
-                                                                <span
-                                                                    className="text-xs text-muted-foreground">N/A</span>
-                                                            )}
-                                                        </TableCell>
-
-                                                        <TableCell className="text-right">
-                                                            <Link
-                                                                to={`/employee/${employee.id}`}
-                                                                className="flex items-center justify-end gap-1 text-sm text-primary hover:underline"
-                                                            >
-                                                                Details
-                                                                <ChevronRight className="h-4 w-4"/>
-                                                            </Link>
-                                                        </TableCell>
-                                                    </TableRow>
-                                                );
-                                            })}
-                                        </TableBody>
-                                    </Table>
-                                ) : (
-                                    <div className="text-center py-8">
-                                        <p className="text-muted-foreground">No team members found.</p>
-                                    </div>
-                                )}
-                            </CardContent>
+                            {getTeamMemberAverages()}
                         </Card>
                     </TabsContent>
                 </Tabs>

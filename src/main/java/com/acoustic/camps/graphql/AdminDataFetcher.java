@@ -22,7 +22,7 @@ public class AdminDataFetcher {
 
     private final TrendCalculationService trendCalculationService;
 
-    @DgsMutation
+    //@DgsMutation
     public CalculationResult recalculateTrends(@InputArgument String teamId) {
         log.info("Admin request to recalculate trends for team ID: {}", teamId);
 

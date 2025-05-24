@@ -37,6 +37,18 @@ public interface EngagementRatingRepository extends JpaRepository<EngagementRati
             UUID employeeId, CampsCategory category);
 
     /**
+     * Find all ratings for a specific employee, category, and date range, ordered by rating date in descending order
+     *
+     * @param employeeId The employee's ID
+     * @param category   The category to filter by
+     * @param fromDate   Start date (inclusive)
+     * @param toDate     End date (inclusive)
+     * @return List of EngagementRatingModel objects
+     */
+    List<EngagementRatingModel> findByEmployeeIdAndCategoryAndRatingDateBetweenOrderByRatingDateDesc(
+            UUID employeeId, CampsCategory category, OffsetDateTime fromDate, OffsetDateTime toDate);
+
+    /**
      * Find the most recent rating for a specific employee and category
      *
      * @param employeeId The employee's ID

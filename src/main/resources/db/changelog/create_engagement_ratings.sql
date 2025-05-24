@@ -1,12 +1,12 @@
 create table if not exists engagement_ratings
 (
-    id            uuid                                not null,
-    employee_id   uuid                                not null,
+    id            uuid                                not null primary key,
+    employee_id   uuid                                not null references employees on delete cascade ,
     rating_date   date                                not null,
     category      varchar(20)                         not null,
     rating        integer                             not null,
     notes         text,
-    created_by_id uuid,
+    created_by_id uuid references employees,
     created_at    timestamp default CURRENT_TIMESTAMP not null
     );
 
@@ -21,16 +21,6 @@ create index if not exists idx_ratings_date
 
 create index if not exists idx_ratings_employee_date
     on engagement_ratings (employee_id, rating_date);
-
-alter table engagement_ratings
-    add primary key (id);
-
-alter table engagement_ratings
-    add foreign key (employee_id) references employees
-        on delete cascade;
-
-alter table engagement_ratings
-    add foreign key (created_by_id) references employees;
 
 alter table engagement_ratings
     add constraint engagement_ratings_category_check

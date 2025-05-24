@@ -1,17 +1,29 @@
 databaseChangeLog:
   - changeSet:
-        id: initialize-tables
-        author: Eric Hutson
-        changes:
-          - sqlFile:
-              path: src/main/resources/db/changelog/create_teams.sql
-          - sqlFile:
-              path: src/main/resources/db/changelog/create_employees.sql
-          - sqlFile:
-              path: src/main/resources/db/changelog/create_engagement_ratings.sql
-          - sqlFile:
-              path: src/main/resources/db/changelog/create_action_items.sql
-          - sqlFile:
-              path: src/main/resources/db/changelog/create_team_stats.sql
-          - sqlFile:
-              path: src/main/resources/db/changelog/create_trend_data.sql
+      id: initialize-tables
+      author: Eric Hutson
+      changes:
+        - sqlFile:
+            path: src/main/resources/db/changelog/create_teams.sql
+        - sqlFile:
+            path: src/main/resources/db/changelog/create_employees.sql
+        - sqlFile:
+            path: src/main/resources/db/changelog/create_engagement_ratings.sql
+        - sqlFile:
+            path: src/main/resources/db/changelog/create_action_items.sql
+  - changeSet:
+      id: analytics-infrastructure
+      author: Eric Hutson
+      changes:
+        - sqlFile:
+            path: src/main/resources/db/changelog/create_trend_data_tables.sql
+        - sqlFile:
+            path: src/main/resources/db/changelog/create_analytics_processing_table.sql
+  - changeSet:
+      id: drop-old-trend-data
+      author: Eric Hutson
+      changes:
+        - sql:
+            sql: DROP TABLE IF EXISTS trend_data;
+        - sql:
+            sql: DROP TABLE IF EXISTS team_stats;

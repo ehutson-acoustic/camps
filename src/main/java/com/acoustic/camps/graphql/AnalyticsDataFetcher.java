@@ -30,7 +30,8 @@ public class AnalyticsDataFetcher {
     @DgsQuery
     public List<CategoryAverage> teamAverages(
             @InputArgument String teamId,
-            @InputArgument OffsetDateTime date) {
+            @InputArgument OffsetDateTime date,
+            @InputArgument Boolean includeStatisticalContext) {
 
         if (teamId == null) {
             throw new IllegalArgumentException("Team id must be provided");
@@ -69,7 +70,7 @@ public class AnalyticsDataFetcher {
                 UUID.fromString(teamId), dateRange.getFromDate(), dateRange.getToDate());
     }
 
-    @DgsQuery
+    //@DgsQuery
     public List<TrendData> trends(
             @InputArgument String employeeId,
             @InputArgument String teamId,

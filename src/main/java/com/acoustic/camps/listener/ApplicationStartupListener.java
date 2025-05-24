@@ -1,6 +1,6 @@
 package com.acoustic.camps.listener;
 
-import com.acoustic.camps.service.TrendCalculationService;
+import com.acoustic.camps.service.WeeklyTrendCalculationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class ApplicationStartupListener {
 
-    private final TrendCalculationService trendCalculationService;
+    private final WeeklyTrendCalculationService trendCalculationService;
 
     @EventListener(ApplicationReadyEvent.class)
     public void onApplicationReady() {

@@ -1,7 +1,7 @@
 create table if not exists action_items
 (
-    id             uuid                                not null,
-    employee_id    uuid                                not null,
+    id             uuid                                not null primary key ,
+    employee_id    uuid                                not null references employees on delete cascade,
     category       varchar(20),
     description    text                                not null,
     created_date   date                                not null,
@@ -10,7 +10,7 @@ create table if not exists action_items
     status         varchar(20)                         not null,
     outcome        text,
     rating_impact  integer,
-    created_by_id  uuid,
+    created_by_id  uuid references employees,
     created_at     timestamp default CURRENT_TIMESTAMP not null,
     updated_at     timestamp default CURRENT_TIMESTAMP not null
     );
@@ -29,16 +29,6 @@ create index if not exists idx_action_items_category
 
 create index if not exists idx_action_items_due_date
     on action_items (due_date);
-
-alter table action_items
-    add primary key (id);
-
-alter table action_items
-    add foreign key (employee_id) references employees
-        on delete cascade;
-
-alter table action_items
-    add foreign key (created_by_id) references employees;
 
 alter table action_items
     add constraint action_items_category_check

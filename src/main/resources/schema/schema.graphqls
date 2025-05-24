@@ -30,14 +30,6 @@ type EngagementRating {
     createdAt: DateTime
 }
 
-enum CampsCategory {
-    CERTAINTY
-    AUTONOMY
-    MEANING
-    PROGRESS
-    SOCIAL_INCLUSION
-}
-
 type ActionItem {
     id: ID!
     employee: Employee!
@@ -54,47 +46,194 @@ type ActionItem {
     updatedAt: DateTime
 }
 
-enum ActionStatus {
-    PLANNED
-    IN_PROGRESS
-    COMPLETED
-    CANCELLED
+# ========================================
+# Enhanced Statistics Types
+# ========================================
+
+type StatisticalContext {
+    sampleSize: Int!
+    standardDeviation: Float
+    variance: Float
+    confidenceInterval: Float
+    isStatisticallySignificant: Boolean!
+    significanceLevel: Float
+}
+
+type RollingAverages {
+    fourWeekAverage: Float
+    twelveWeekAverage: Float
+    sixMonthAverage: Float
+}
+
+type VolatilityIndicators {
+    volatilityScore: Float!        # 0-1 scale, 1 being most volatile
+    stabilityRating: StabilityRating!
+    trendDirection: TrendDirection!
+    seasonalityDetected: Boolean!
+}
+
+# ========================================
+# Separated Trend Data Types (NEW)
+# ========================================
+
+type EmployeeTrendData {
+    id: ID!
+    employee: Employee!
+    recordDate: DateTime!
+    aggregationPeriod: AggregationPeriod!
+    category: CampsCategory!
+    averageRating: Float!
+
+    # Change tracking
+    weekOverWeekChange: Float
+    monthOverMonthChange: Float
+    quarterOverQuarterChange: Float
+    yearOverYearChange: Float
+
+    # Statistical context
+    statisticalContext: StatisticalContext!
+    rollingAverages: RollingAverages
+    volatilityIndicators: VolatilityIndicators
+
+    # Metadata
+    createdAt: DateTime!
+    calculatedAt: DateTime!
+}
+
+type TeamTrendData {
+    id: ID!
+    team: Team!
+    recordDate: DateTime!
+    aggregationPeriod: AggregationPeriod!
+    category: CampsCategory!
+    averageRating: Float!
+
+    # Change tracking
+    weekOverWeekChange: Float
+    monthOverMonthChange: Float
+    quarterOverQuarterChange: Float
+    yearOverYearChange: Float
+
+    # Statistical context
+    statisticalContext: StatisticalContext!
+    rollingAverages: RollingAverages
+    volatilityIndicators: VolatilityIndicators
+
+    # Team-specific metrics
+    participationRate: Float!       # Percentage of team members who provided ratings
+    teamSize: Int!
+
+    # Metadata
+    createdAt: DateTime!
+    calculatedAt: DateTime!
 }
 
 type TeamStats {
     id: ID!
     team: Team!
     recordDate: DateTime!
+    aggregationPeriod: AggregationPeriod!
     category: CampsCategory!
     averageRating: Float!
-    previousAverageRating: Float
-    employeeCount: Int
-    createdAt: DateTime
+
+    # Enhanced statistics
+    statisticalContext: StatisticalContext!
+    weekOverWeekChange: Float
+    monthOverMonthChange: Float
+
+    # Team-specific
+    employeeCount: Int!
+    participationRate: Float!
+
+    createdAt: DateTime!
 }
 
-type TrendData {
-    id: ID!
-    employee: Employee
-    team: Team
-    recordDate: DateTime!
-    category: CampsCategory!
-    averageRating: Float!
-    monthOverMonthChange: Float
-    quarterOverQuarterChange: Float
-    yearOverYearChange: Float
-}
+# ========================================
+# Enhanced Category Analysis
+# ========================================
 
 type CategoryAverage {
     category: CampsCategory!
     averageRating: Float!
     previousAverageRating: Float
     change: Float
+    weekOverWeekChange: Float
+
+    # Statistical rigor
+    statisticalContext: StatisticalContext!
+    rollingAverages: RollingAverages
+    volatilityIndicators: VolatilityIndicators
+}
+
+# ========================================
+# Weekly Analytics Types
+# ========================================
+
+type WeeklyTrendSummary {
+    weekStartDate: DateTime!
+    weekEndDate: DateTime!
+    weekNumber: Int!
+    year: Int!
+
+    categoryAverages: [CategoryAverage!]!
+    overallTeamAverage: Float!
+    participationRate: Float!
+    significantChanges: [SignificantChange!]!
+
+    # Week-over-week analysis
+    weekOverWeekSummary: WeekOverWeekSummary
+}
+
+type WeekOverWeekSummary {
+    overallChange: Float!
+    improvingCategories: [CampsCategory!]!
+    decliningCategories: [CampsCategory!]!
+    stableCategories: [CampsCategory!]!
+    significantChangesCount: Int!
+}
+
+type SignificantChange {
+    category: CampsCategory!
+    changeType: ChangeType!
+    changeMagnitude: Float!
+    previousValue: Float!
+    currentValue: Float!
+    isStatisticallySignificant: Boolean!
+    confidenceLevel: Float!
+}
+
+# ========================================
+# Result Types for Complex Queries
+# ========================================
+
+type WeeklyAnalysisResult {
+    teamId: ID!
+    analysisDate: DateTime!
+    weeklyTrends: [WeeklyTrendSummary!]!
+    overallTrend: TrendDirection!
+    keyInsights: [String!]!
+    recommendedActions: [String!]!
+    statisticalSummary: StatisticalSummary!
+}
+
+type StatisticalSummary {
+    averageVolatility: Float!
+    mostStableCategory: CampsCategory
+    mostVolatileCategory: CampsCategory
+    overallConfidenceLevel: Float!
+    dataQualityScore: Float!        # Based on participation rates and consistency
 }
 
 type CalculationResult {
     success: Boolean!
     message: String
+    calculatedRecords: Int
+    errors: [String!]
 }
+
+# ========================================
+# Input Types
+# ========================================
 
 input EmployeeInput {
     name: String!
@@ -132,14 +271,84 @@ input DateRangeInput {
     toDate: DateTime!
 }
 
+input WeekRangeInput {
+    startWeek: Int!     # Week number (1-52)
+    endWeek: Int!       # Week number (1-52)
+    year: Int!          # Year
+}
+
+input TrendAnalysisInput {
+    aggregationPeriod: AggregationPeriod!
+    includeStatisticalContext: Boolean! = true
+    includeVolatilityIndicators: Boolean! = true
+    includeRollingAverages: Boolean! = true
+}
+
+# ========================================
+# Enums
+# ========================================
+
+enum CampsCategory {
+    CERTAINTY
+    AUTONOMY
+    MEANING
+    PROGRESS
+    SOCIAL_INCLUSION
+}
+
 enum TimePeriod {
+    LAST_WEEK
+    LAST_2_WEEKS
+    LAST_4_WEEKS
     LAST_30_DAYS
     LAST_90_DAYS
     LAST_6_MONTHS
     LAST_YEAR
+    CUSTOM_RANGE
 }
 
+enum AggregationPeriod {
+    DAILY
+    WEEKLY
+    MONTHLY
+    QUARTERLY
+    YEARLY
+}
+
+enum ActionStatus {
+    PLANNED
+    IN_PROGRESS
+    COMPLETED
+    CANCELLED
+}
+
+enum StabilityRating {
+    VERY_STABLE
+    STABLE
+    MODERATE
+    VOLATILE
+    VERY_VOLATILE
+}
+
+enum TrendDirection {
+    STRONGLY_INCREASING
+    INCREASING
+    STABLE
+    DECREASING
+    STRONGLY_DECREASING
+}
+
+enum ChangeType {
+    SIGNIFICANT_IMPROVEMENT
+    MODERATE_IMPROVEMENT
+    STABLE
+    MODERATE_DECLINE
+    SIGNIFICANT_DECLINE
+}
+
+# ========================================
 # Queries
+# ========================================
 type Query {
     # Employee queries
     employees(teamId: ID): [Employee!]!
@@ -163,22 +372,53 @@ type Query {
     teamStats(
         teamId: ID!
         dateRange: DateRangeInput
+        aggregationPeriod: AggregationPeriod! = WEEKLY
+        trendAnalysis: TrendAnalysisInput
     ): [TeamStats!]!
 
     teamAverages(
-        teamId: ID!,
+        teamId: ID!
         date: DateTime
+        includeStatisticalContext: Boolean! = true
     ): [CategoryAverage!]!
 
-    # Trend analysis
-    trends(
-        employeeId: ID,
-        teamId: ID,
-        category: CampsCategory,
-        timePeriod: TimePeriod!
-    ): [TrendData!]!
+    # Weekly analytics queries
+    weeklyTrendSummary(
+        teamId: ID!
+        weekRange: WeekRangeInput!
+    ): [WeeklyTrendSummary!]!
 
-    # Action items
+    weeklyTeamAnalysis(
+        teamId: ID!
+        weeksBack: Int! = 12
+        includeStatisticalContext: Boolean! = true
+    ): WeeklyAnalysisResult!
+
+    # Enhanced trend queries (separated by type)
+    employeeTrends(
+        employeeId: ID!,
+        category: CampsCategory,
+        timePeriod: TimePeriod!,
+        dateRange: DateRangeInput,
+        trendAnalysis: TrendAnalysisInput
+    ): [EmployeeTrendData!]!
+
+    teamTrends(
+        teamId: ID!,
+        category: CampsCategory,
+        timePeriod: TimePeriod!,
+        dateRange: DateRangeInput,
+        trendAnalysis: TrendAnalysisInput
+    ): [TeamTrendData!]!
+
+    # Statistical significance queries
+    significantChanges(
+        teamId: ID!,
+        timePeriod: TimePeriod!,
+        minimumSignificanceLevel: Float! = 0.05
+    ): [SignificantChange!]!
+
+    # Action items (unchanged)
     actionItems(
         employeeId: ID,
         status: ActionStatus,
@@ -186,7 +426,9 @@ type Query {
     ): [ActionItem!]!
 }
 
+# ========================================
 # Mutations
+# ========================================
 type Mutation {
     # Employee management
     createEmployee(input: EmployeeInput!): Employee!
@@ -212,10 +454,12 @@ type Mutation {
     cancelActionItem(id: ID!, reason: String): ActionItem!
     deleteActionItem(id: ID!): Boolean!
 
-    # Recalculate trends for a specific team or all teams if teamId is null
-    recalculateTrends(teamId: ID): CalculationResult!
+    # Trend calculation triggers (for admin use)
+    recalculateWeeklyTrends(teamId: ID): CalculationResult!
+    recalculateStatisticalContext(teamId: ID): CalculationResult!
 }
 
-# Custom scalars
-#scalar Date
+# ========================================
+# Custom Scalars
+# ========================================
 scalar DateTime

@@ -5,17 +5,20 @@ import com.acoustic.camps.codegen.types.CategoryAverage;
 import com.acoustic.camps.codegen.types.Team;
 import com.acoustic.camps.codegen.types.TeamStats;
 import com.acoustic.camps.codegen.types.TrendData;
-import com.acoustic.camps.mapper.TrendDataMapper;
+import com.acoustic.camps.mapper.EmployeeTrendDataMapper;
+import com.acoustic.camps.mapper.TeamTrendDataMapper;
 import com.acoustic.camps.model.EmployeeModel;
+import com.acoustic.camps.model.EmployeeTrendDataModel;
 import com.acoustic.camps.model.EngagementRatingModel;
 import com.acoustic.camps.model.TeamModel;
 import com.acoustic.camps.model.TeamStatsModel;
-import com.acoustic.camps.model.TrendDataModel;
+import com.acoustic.camps.model.TeamTrendDataModel;
 import com.acoustic.camps.repository.EmployeeRepository;
+import com.acoustic.camps.repository.EmployeeTrendDataRepository;
 import com.acoustic.camps.repository.EngagementRatingRepository;
 import com.acoustic.camps.repository.TeamRepository;
 import com.acoustic.camps.repository.TeamStatsRepository;
-import com.acoustic.camps.repository.TrendDataRepository;
+import com.acoustic.camps.repository.TeamTrendDataRepository;
 import com.acoustic.camps.util.time.ComparisonPeriod;
 import com.acoustic.camps.util.time.DateInterval;
 import lombok.RequiredArgsConstructor;
@@ -26,12 +29,10 @@ import java.sql.Timestamp;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -47,9 +48,11 @@ public class AnalyticsService {
     private final EngagementRatingRepository ratingRepository;
     private final EmployeeRepository employeeRepository;
     private final TeamStatsRepository teamStatsRepository;
-    private final TrendDataRepository trendDataRepository;
+    private final TeamTrendDataRepository teamTrendDataRepository;
+    private final EmployeeTrendDataRepository employeeTrendDataRepository;
     private final TeamRepository teamRepository;
-    private final TrendDataMapper trendDataMapper;
+    private final TeamTrendDataMapper teamTrendDataMapper;
+    private final EmployeeTrendDataMapper employeeTrendDataMapper;
 
     @Transactional(readOnly = true)
     public List<CategoryAverage> getTeamAveragesWithComparison(UUID teamId, OffsetDateTime date) {
@@ -158,68 +161,59 @@ public class AnalyticsService {
         return result;
     }
 
+    /**
+     * Get the date of the most recent trend calculation for a team
+     *
+     * @param teamId Team ID
+     * @return The most recent calculation date or null if none exists
+     */
+    @Transactional(readOnly = true)
+    public OffsetDateTime getLastTrendCalculationDate(UUID teamId) {
+        TeamModel team = getTeamModel(teamId);
+
+        // Check in the team trend data repository
+        Optional<TeamTrendDataModel> latestTrendData = teamTrendDataRepository.findAll().stream()
+                .filter(trend -> trend.getTeam().getId().equals(teamId))
+                .max((a, b) -> a.getCreatedAt().compareTo(b.getCreatedAt()));
+
+        return latestTrendData.map(TeamTrendDataModel::getCreatedAt).orElse(null);
+    }
+
     @Transactional(readOnly = true)
     public List<TrendData> getTrends(UUID employeeId, UUID teamId, CampsCategory category, OffsetDateTime fromDate, OffsetDateTime toDate) {
+        List<TrendData> result = new ArrayList<>();
+
         // Generate or retrieve trend data
         if (employeeId != null) {
-            return trendDataMapper.toTrendDataList(trendDataRepository.findByEmployeeIdAndCategoryAndRecordDateBetweenOrderByRecordDateAsc(
-                    employeeId, category, fromDate, toDate));
+            EmployeeModel employee = employeeRepository.findById(employeeId)
+                    .orElseThrow(() -> new IllegalArgumentException("Employee not found"));
+
+            List<EmployeeTrendDataModel> employeeTrends = employeeTrendDataRepository
+                    .findByEmployeeAndCategoryAndRecordDateBetweenOrderByRecordDateAsc(
+                            employee, category, fromDate, toDate);
+
+            // Map to TrendData DTOs
+            return employeeTrendDataMapper.toTrendDataList(employeeTrends);
         } else if (teamId != null) {
             TeamModel team = getTeamModel(teamId);
 
-            return trendDataMapper.toTrendDataList(trendDataRepository.findByTeamAndCategoryAndRecordDateBetweenOrderByRecordDateAsc(
-                    team, category, fromDate, toDate));
-        } else {
-            return Collections.emptyList();
+            List<TeamTrendDataModel> teamTrends = teamTrendDataRepository
+                    .findByTeamAndCategoryAndRecordDateBetweenOrderByRecordDateAsc(
+                            team, category, fromDate, toDate);
+
+            // Map to TrendData DTOs
+            return teamTrendDataMapper.toTrendDataList(teamTrends);
         }
-    }
 
-    /**
-     * Generates trend data for the specified month
-     * This method would typically be called by a scheduled job at the end of each month
-     *
-     * @param monthStart The first day of the month to generate trend data for
-     */
-    @Transactional
-    public void generateMonthlyTrendData(OffsetDateTime monthStart) {
-        // Ensure we're using the first day of a month
-        monthStart = monthStart.withDayOfMonth(1);
-
-        // Define previous periods for comparison
-        OffsetDateTime previousMonth = monthStart.minusMonths(1);
-        OffsetDateTime previousQuarter = monthStart.minusMonths(3);
-        OffsetDateTime previousYear = monthStart.minusYears(1);
-
-        // Process each CAMPS category
-        for (CampsCategory category : CampsCategory.values()) {
-            // Generate team-level trends
-            List<TeamModel> teams = employeeRepository.findAll().stream()
-                    .map(EmployeeModel::getTeam)
-                    .filter(Objects::nonNull)
-                    .distinct()
-                    .toList();
-
-            for (TeamModel team : teams) {
-                generateTeamTrendData(team, category, monthStart, previousMonth, previousQuarter, previousYear);
-            }
-
-            // Generate employee-level trends
-            List<EmployeeModel> employeeModels = employeeRepository.findAll();
-            for (EmployeeModel employeeModel : employeeModels) {
-                generateEmployeeTrendData(employeeModel, category, monthStart, previousMonth, previousQuarter, previousYear);
-            }
-
-            // Generate organization-wide trends
-            generateOrganizationTrendData(category, monthStart, previousMonth, previousQuarter, previousYear);
-        }
+        return result;
     }
 
     /**
      * Helper method to generate trend data for a team
      */
     public void generateTeamTrendData(TeamModel team, CampsCategory category,
-                                       OffsetDateTime currentMonth, OffsetDateTime previousMonth,
-                                       OffsetDateTime previousQuarter, OffsetDateTime previousYear) {
+                                      OffsetDateTime currentMonth, OffsetDateTime previousMonth,
+                                      OffsetDateTime previousQuarter, OffsetDateTime previousYear) {
         // Get current month average
         Double currentAvg = teamStatsRepository
                 .findTopByTeamAndCategoryAndRecordDateLessThanEqualOrderByRecordDateDesc(
@@ -251,122 +245,18 @@ public class AnalyticsService {
                 .orElse(null);
 
         // Create and save trend data entity
-        TrendDataModel trendDataModel = TrendDataModel.builder()
+        TeamTrendDataModel trendDataModel = TeamTrendDataModel.builder()
                 .team(team)
                 .recordDate(currentMonth)
                 .category(category)
                 .averageRating(currentAvg)
+                .previousAverageRating(prevMonthAvg)
                 .monthOverMonthChange(calculateChange(currentAvg, prevMonthAvg))
                 .quarterOverQuarterChange(calculateChange(currentAvg, prevQuarterAvg))
                 .yearOverYearChange(calculateChange(currentAvg, prevYearAvg))
                 .build();
 
-        trendDataRepository.save(trendDataModel);
-    }
-
-    /**
-     * Helper method to generate trend data for an employee
-     */
-    private void generateEmployeeTrendData(EmployeeModel employeeModel, CampsCategory category,
-                                           OffsetDateTime currentMonth, OffsetDateTime previousMonth,
-                                           OffsetDateTime previousQuarter, OffsetDateTime previousYear) {
-        // Get the current month rating
-        EngagementRatingModel currentRating = ratingRepository
-                .findTopByEmployeeIdAndCategoryAndRatingDateLessThanEqualOrderByRatingDateDesc(
-                        employeeModel.getId(), category, currentMonth.plusMonths(1).minusDays(1))
-                .orElse(null);
-
-        if (currentRating == null) {
-            return; // No data for this month
-        }
-
-        // Get previous period ratings
-        EngagementRatingModel prevMonthRating = ratingRepository
-                .findTopByEmployeeIdAndCategoryAndRatingDateLessThanEqualOrderByRatingDateDesc(
-                        employeeModel.getId(), category, previousMonth.plusMonths(1).minusDays(1))
-                .orElse(null);
-
-        EngagementRatingModel prevQuarterRating = ratingRepository
-                .findTopByEmployeeIdAndCategoryAndRatingDateLessThanEqualOrderByRatingDateDesc(
-                        employeeModel.getId(), category, previousQuarter.plusMonths(1).minusDays(1))
-                .orElse(null);
-
-        EngagementRatingModel prevYearRating = ratingRepository
-                .findTopByEmployeeIdAndCategoryAndRatingDateLessThanEqualOrderByRatingDateDesc(
-                        employeeModel.getId(), category, previousYear.plusMonths(1).minusDays(1))
-                .orElse(null);
-
-        // Create and save trend data entity
-        TrendDataModel trendDataModel = TrendDataModel.builder()
-                .employee(employeeModel)
-                .team(employeeModel.getTeam())
-                .recordDate(currentMonth)
-                .category(category)
-                .averageRating((double) currentRating.getRating())
-                .monthOverMonthChange(calculateChange(
-                        (double) currentRating.getRating(),
-                        prevMonthRating != null ? (double) prevMonthRating.getRating() : null))
-                .quarterOverQuarterChange(calculateChange(
-                        (double) currentRating.getRating(),
-                        prevQuarterRating != null ? (double) prevQuarterRating.getRating() : null))
-                .yearOverYearChange(calculateChange(
-                        (double) currentRating.getRating(),
-                        prevYearRating != null ? (double) prevYearRating.getRating() : null))
-                .build();
-
-        trendDataRepository.save(trendDataModel);
-    }
-
-    /**
-     * Helper method to generate organization-wide trend data
-     */
-    private void generateOrganizationTrendData(CampsCategory category,
-                                               OffsetDateTime currentMonth, OffsetDateTime previousMonth,
-                                               OffsetDateTime previousQuarter, OffsetDateTime previousYear) {
-        // Calculate current month average across all employees
-        Double currentAvg = calculateOrganizationAverage(category, currentMonth.plusMonths(1).minusDays(1));
-
-        if (currentAvg == null) {
-            return; // No data for this month
-        }
-
-        // Calculate previous period averages
-        Double prevMonthAvg = calculateOrganizationAverage(category, previousMonth.plusMonths(1).minusDays(1));
-        Double prevQuarterAvg = calculateOrganizationAverage(category, previousQuarter.plusMonths(1).minusDays(1));
-        Double prevYearAvg = calculateOrganizationAverage(category, previousYear.plusMonths(1).minusDays(1));
-
-        // Create and save trend data entity
-        TrendDataModel trendDataModel = TrendDataModel.builder()
-                .recordDate(currentMonth)
-                .category(category)
-                .averageRating(currentAvg)
-                .monthOverMonthChange(calculateChange(currentAvg, prevMonthAvg))
-                .quarterOverQuarterChange(calculateChange(currentAvg, prevQuarterAvg))
-                .yearOverYearChange(calculateChange(currentAvg, prevYearAvg))
-                .build();
-
-        trendDataRepository.save(trendDataModel);
-    }
-
-    /**
-     * Helper method to calculate organization-wide average for a category
-     */
-    private Double calculateOrganizationAverage(CampsCategory category, OffsetDateTime asOfDate) {
-        List<EmployeeModel> employeeModels = employeeRepository.findAll();
-        List<Double> ratings = new ArrayList<>();
-
-        for (EmployeeModel employeeModel : employeeModels) {
-            ratingRepository
-                    .findTopByEmployeeIdAndCategoryAndRatingDateLessThanEqualOrderByRatingDateDesc(
-                            employeeModel.getId(), category, asOfDate)
-                    .ifPresent(rating -> ratings.add((double) rating.getRating()));
-        }
-
-        if (ratings.isEmpty()) {
-            return null;
-        }
-
-        return ratings.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
+        teamTrendDataRepository.save(trendDataModel);
     }
 
     /**
@@ -374,65 +264,10 @@ public class AnalyticsService {
      */
     private Double calculateChange(Double current, Double previous) {
         if (current == null || previous == null) {
-            return 0.0;
+            return null;
         }
         return current - previous;
     }
-
-    /**
-     * Identifies employees with significant rating changes
-     *
-     * @param threshold The minimum change to be considered significant
-     * @return List of Maps containing employee details and rating changes
-     */
-    /*
-    @Transactional(readOnly = true)
-    public List<Map<String, Object>> identifySignificantChanges(int threshold) {
-        List<Map<String, Object>> results = new ArrayList<>();
-        List<EmployeeModel> employeeModels = employeeRepository.findAll();
-        LocalDate oneMonthAgo = LocalDate.now().minusMonths(1);
-
-        for (EmployeeModel employeeModel : employeeModels) {
-            for (CampsCategory category : CampsCategory.values()) {
-                // Get the most recent rating
-                Optional<EngagementRatingModel> currentRatingOpt = ratingRepository
-                        .findTopByEmployeeIdAndCategoryOrderByRatingDateDesc(employeeModel.getId(), category);
-
-                if (currentRatingOpt.isPresent()) {
-                    EngagementRatingModel currentRating = currentRatingOpt.get();
-
-                    // Check if there's a significant change from previous
-                    if (currentRating.getPreviousRating() != null &&
-                            Math.abs(currentRating.getRating() - currentRating.getPreviousRating()) >= threshold &&
-                            currentRating.getRatingDate().isAfter(oneMonthAgo)) {
-
-                        Map<String, Object> change = new HashMap<>();
-                        change.put("employeeId", employeeModel.getId());
-                        change.put("employeeName", employeeModel.getName());
-                        change.put("team", employeeModel.getTeam());
-                        change.put("category", category);
-                        change.put("oldRating", currentRating.getPreviousRating());
-                        change.put("newRating", currentRating.getRating());
-                        change.put("change", currentRating.getRating() - currentRating.getPreviousRating());
-                        change.put("ratingDate", currentRating.getRatingDate());
-
-                        results.add(change);
-                    }
-                }
-            }
-        }
-
-        // Sort by absolute change magnitude (descending)
-        results.sort((a, b) -> {
-            int changeA = Math.abs((Integer) a.get("change"));
-            int changeB = Math.abs((Integer) b.get("change"));
-            return Integer.compare(changeB, changeA);
-        });
-
-        return results;
-    }
-
-     */
 
     /**
      * Gets the most improved category for each employee within a date range
