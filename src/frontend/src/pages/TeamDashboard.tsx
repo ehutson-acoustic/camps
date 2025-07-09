@@ -40,6 +40,29 @@ const TeamDashboard: React.FC = () => {
     // Memoize the date to avoid unnecessary re-renders
     const currentDate = React.useMemo(() => new Date().toISOString(), []);
 
+    // Utility function to format change values
+    const formatChangeValue = (value: number | null | undefined, showSign: boolean = true): string => {
+        if (value === null || value === undefined) return 'N/A';
+        const sign = showSign && value > 0 ? '+' : '';
+        return `${sign}${value.toFixed(1)} pts`;
+    };
+
+    // Utility function to get change color class
+    const getChangeColorClass = (value: number | null | undefined): string => {
+        if (value === null || value === undefined) return 'text-muted-foreground';
+        if (value > 0.5) return 'text-green-600';
+        if (value < -0.5) return 'text-red-600';
+        return 'text-muted-foreground';
+    };
+
+    // Utility function to get border color class for cards
+    const getCardBorderClass = (value: number | null | undefined): string => {
+        if (value === null || value === undefined) return '';
+        if (value > 0.5) return 'border-green-200 bg-green-50/50';
+        if (value < -0.5) return 'border-red-200 bg-red-50/50';
+        return '';
+    };
+
     // Fetch team data
     const {data: teamData, loading: teamLoading, error: teamError} = useGetTeam({
         variables: {teamId: teamId ?? ''},
@@ -59,7 +82,7 @@ const TeamDashboard: React.FC = () => {
     });
 
     // Fetch trends data for the selected category
-    const {data: trendsData, loading: trendsLoading} = useGetTrends({
+    const {data: trendsData, loading: trendsLoading, error: trendsError} = useGetTrends({
         variables: {
             teamId: teamId ?? '',
             category: selectedCategory,
@@ -97,16 +120,30 @@ const TeamDashboard: React.FC = () => {
             .sort((a, b) => a.averageRating - b.averageRating)
             .slice(0, 2);
 
-        // Find the most improved categories
+        // Find the most improved categories - prioritize weekOverWeekChange if available, fallback to change
         const mostImproved = [...averagesData.teamAverages]
-            .filter(avg => avg.change && avg.change > 0)
-            .sort((a, b) => (b.change ?? 0) - (a.change ?? 0))
+            .filter(avg => {
+                const changeValue = avg.weekOverWeekChange ?? avg.change;
+                return changeValue && changeValue > 0;
+            })
+            .sort((a, b) => {
+                const changeA = a.weekOverWeekChange ?? a.change ?? 0;
+                const changeB = b.weekOverWeekChange ?? b.change ?? 0;
+                return changeB - changeA;
+            })
             .slice(0, 2);
 
-        // Find categories with declining scores
+        // Find categories with declining scores - prioritize weekOverWeekChange if available, fallback to change
         const declining = [...averagesData.teamAverages]
-            .filter(avg => avg.change && avg.change < 0)
-            .sort((a, b) => (a.change ?? 0) - (b.change ?? 0))
+            .filter(avg => {
+                const changeValue = avg.weekOverWeekChange ?? avg.change;
+                return changeValue && changeValue < 0;
+            })
+            .sort((a, b) => {
+                const changeA = a.weekOverWeekChange ?? a.change ?? 0;
+                const changeB = b.weekOverWeekChange ?? b.change ?? 0;
+                return changeA - changeB;
+            })
             .slice(0, 2);
 
         return {needsImprovement, mostImproved, declining};
@@ -116,12 +153,27 @@ const TeamDashboard: React.FC = () => {
     const trendChartData = React.useMemo(() => {
         if (!trendsData?.trends) return [];
 
-        return trendsData.trends.map(trend => ({
-            date: format(new Date(trend.recordDate), 'MMM d'),
-            value: trend.averageRating,
-            change: trend.monthOverMonthChange ?? 0, // Provide a fallback value for null/undefined
-            fillColor: (trend.monthOverMonthChange ?? 0) >= 0 ? "#4CAF50" : "#F44336" // Add fillColor property
-        }));
+        return trendsData.trends
+            .filter(trend => trend.recordDate && trend.averageRating !== null) // Filter out invalid data
+            .map(trend => {
+                const monthChange = trend.monthOverMonthChange ?? 0;
+                const weekChange = trend.weekOverWeekChange ?? 0;
+                
+                return {
+                    date: format(new Date(trend.recordDate), 'MMM d'),
+                    value: trend.averageRating,
+                    change: monthChange, // Keep month-over-month for bar chart
+                    weekChange: weekChange, // Add week-over-week for additional context
+                    fillColor: monthChange >= 0 ? "#4CAF50" : "#F44336", // Color based on month change
+                    weekFillColor: weekChange >= 0 ? "#4CAF50" : "#F44336", // Color based on week change
+                    // Add additional properties for better chart rendering
+                    quarterOverQuarterChange: trend.quarterOverQuarterChange ?? 0,
+                    yearOverYearChange: trend.yearOverYearChange ?? 0,
+                    // Add formatted date for sorting
+                    sortDate: new Date(trend.recordDate)
+                };
+            })
+            .sort((a, b) => a.sortDate.getTime() - b.sortDate.getTime()); // Sort by actual date
     }, [trendsData]);
 
     // Transform category data for radar chart
@@ -265,24 +317,35 @@ const TeamDashboard: React.FC = () => {
                 </CardTitle>
             </CardHeader>
             <CardContent>
-                {insights?.needsImprovement.map(category => (
-                    <div key={category.category} className="mb-4 last:mb-0">
-                        <div className="flex justify-between mb-1">
-                                                <span
-                                                    className="font-medium">{CAMPS_CATEGORIES[category.category].name}</span>
-                            <span>{category.averageRating.toFixed(1)}</span>
+                {insights?.needsImprovement.map(category => {
+                    const changeValue = category.weekOverWeekChange ?? category.change ?? null;
+                    return (
+                        <div key={category.category} className="mb-4 last:mb-0">
+                            <div className="flex justify-between mb-1">
+                                <span className="font-medium">{CAMPS_CATEGORIES[category.category].name}</span>
+                                <div className="flex flex-col items-end">
+                                    <span className="font-medium">{category.averageRating.toFixed(1)}/10</span>
+                                    {changeValue !== null && (
+                                        <span className={`text-xs flex items-center ${getChangeColorClass(changeValue)}`}>
+                                            {changeValue > 0 ? <ArrowUpIcon className="h-3 w-3 mr-1"/> : 
+                                             changeValue < 0 ? <ArrowDownIcon className="h-3 w-3 mr-1"/> : null}
+                                            {formatChangeValue(changeValue, true)}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="w-full bg-muted rounded-full h-2.5">
+                                <div
+                                    className="bg-amber-500 h-2.5 rounded-full transition-all duration-300"
+                                    style={{width: `${Math.min(100, Math.max(0, category.averageRating * 10))}%`}}
+                                ></div>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1">
+                                {CAMPS_CATEGORIES[category.category].description}
+                            </p>
                         </div>
-                        <div className="w-full bg-muted rounded-full h-2.5">
-                            <div
-                                className="bg-amber-500 h-2.5 rounded-full"
-                                style={{width: `${category.averageRating * 10}%`}}
-                            ></div>
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-1">
-                            {CAMPS_CATEGORIES[category.category].description}
-                        </p>
-                    </div>
-                ))}
+                    );
+                })}
             </CardContent>
         </Card>;
     }
@@ -297,27 +360,31 @@ const TeamDashboard: React.FC = () => {
             </CardHeader>
             <CardContent>
                 {insights?.mostImproved.length ? (
-                    insights.mostImproved.map(category => (
-                        <div key={category.category} className="mb-4 last:mb-0">
-                            <div className="flex justify-between mb-1">
-                                                    <span
-                                                        className="font-medium">{CAMPS_CATEGORIES[category.category].name}</span>
-                                <span className="text-green-600 flex items-center">
-                            <ArrowUpIcon className="h-3 w-3 mr-1"/>
-                                    {category.change?.toFixed(1)}
-                          </span>
+                    insights.mostImproved.map(category => {
+                        const changeValue = category.weekOverWeekChange ?? category.change ?? 0;
+                        return (
+                            <div key={category.category} className="mb-4 last:mb-0">
+                                <div className="flex justify-between mb-1">
+                                    <span className="font-medium">{CAMPS_CATEGORIES[category.category].name}</span>
+                                    <span className="text-green-600 flex items-center">
+                                        <ArrowUpIcon className="h-3 w-3 mr-1"/>
+                                        {formatChangeValue(changeValue, true)}
+                                    </span>
+                                </div>
+                                <div className="w-full bg-muted rounded-full h-2.5">
+                                    <div
+                                        className="bg-green-500 h-2.5 rounded-full transition-all duration-300"
+                                        style={{width: `${Math.min(100, Math.max(0, category.averageRating * 10))}%`}}
+                                    ></div>
+                                </div>
+                                <div className="text-xs text-muted-foreground mt-1">
+                                    Current: {category.averageRating.toFixed(1)}/10
+                                </div>
                             </div>
-                            <div className="w-full bg-muted rounded-full h-2.5">
-                                <div
-                                    className="bg-green-500 h-2.5 rounded-full"
-                                    style={{width: `${category.averageRating * 10}%`}}
-                                ></div>
-                            </div>
-                        </div>
-                    ))
+                        );
+                    })
                 ) : (
-                    <p className="text-muted-foreground text-sm">No improvements in the current
-                        period.</p>
+                    <p className="text-muted-foreground text-sm">No improvements in the current period.</p>
                 )}
             </CardContent>
         </Card>;
@@ -333,27 +400,31 @@ const TeamDashboard: React.FC = () => {
             </CardHeader>
             <CardContent>
                 {insights?.declining.length ? (
-                    insights.declining.map(category => (
-                        <div key={category.category} className="mb-4 last:mb-0">
-                            <div className="flex justify-between mb-1">
-                                                    <span
-                                                        className="font-medium">{CAMPS_CATEGORIES[category.category].name}</span>
-                                <span className="text-red-600 flex items-center">
-                            <ArrowDownIcon className="h-3 w-3 mr-1"/>
-                                    {Math.abs(category.change ?? 0).toFixed(1)}
-                          </span>
+                    insights.declining.map(category => {
+                        const changeValue = category.weekOverWeekChange ?? category.change ?? 0;
+                        return (
+                            <div key={category.category} className="mb-4 last:mb-0">
+                                <div className="flex justify-between mb-1">
+                                    <span className="font-medium">{CAMPS_CATEGORIES[category.category].name}</span>
+                                    <span className="text-red-600 flex items-center">
+                                        <ArrowDownIcon className="h-3 w-3 mr-1"/>
+                                        {formatChangeValue(changeValue, false)}
+                                    </span>
+                                </div>
+                                <div className="w-full bg-muted rounded-full h-2.5">
+                                    <div
+                                        className="bg-red-500 h-2.5 rounded-full transition-all duration-300"
+                                        style={{width: `${Math.min(100, Math.max(0, category.averageRating * 10))}%`}}
+                                    ></div>
+                                </div>
+                                <div className="text-xs text-muted-foreground mt-1">
+                                    Current: {category.averageRating.toFixed(1)}/10
+                                </div>
                             </div>
-                            <div className="w-full bg-muted rounded-full h-2.5">
-                                <div
-                                    className="bg-red-500 h-2.5 rounded-full"
-                                    style={{width: `${category.averageRating * 10}%`}}
-                                ></div>
-                            </div>
-                        </div>
-                    ))
+                        );
+                    })
                 ) : (
-                    <p className="text-muted-foreground text-sm">No declining metrics in the current
-                        period.</p>
+                    <p className="text-muted-foreground text-sm">No declining metrics in the current period.</p>
                 )}
             </CardContent>
         </Card>;
@@ -373,6 +444,12 @@ const TeamDashboard: React.FC = () => {
                 {trendsLoading ? (
                     <div className="h-full flex items-center justify-center">
                         <p>Loading trends...</p>
+                    </div>
+                ) : trendsError ? (
+                    <div className="h-full flex flex-col items-center justify-center gap-2 text-destructive">
+                        <AlertTriangle className="h-8 w-8"/>
+                        <p className="text-sm">Error loading trend data</p>
+                        <p className="text-xs text-muted-foreground">{trendsError.message}</p>
                     </div>
                 ) : trendChartData.length > 0 ? (
                     <ResponsiveContainer width="100%" height="100%">
@@ -412,6 +489,12 @@ const TeamDashboard: React.FC = () => {
                 {trendsLoading ? (
                     <div className="h-full flex items-center justify-center">
                         <p>Loading trends...</p>
+                    </div>
+                ) : trendsError ? (
+                    <div className="h-full flex flex-col items-center justify-center gap-2 text-destructive">
+                        <AlertTriangle className="h-8 w-8"/>
+                        <p className="text-sm">Error loading trend data</p>
+                        <p className="text-xs text-muted-foreground">{trendsError.message}</p>
                     </div>
                 ) : trendChartData.length > 0 ? (
                     <ResponsiveContainer width="100%" height="100%">
@@ -458,25 +541,34 @@ const TeamDashboard: React.FC = () => {
 
                 {/* Summary Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                    {averagesData?.teamAverages?.map(avg => (
-                        <Card key={avg.category}
-                              className={avg.change && avg.change > 0 ? "border-green-200" : avg.change && avg.change < 0 ? "border-red-200" : ""}>
-                            <CardContent className="pt-6">
-                                <div className="flex flex-col items-center gap-1">
-                                    <span className="text-3xl font-bold">{avg.averageRating.toFixed(1)}</span>
-                                    <span className="text-sm font-medium">{CAMPS_CATEGORIES[avg.category].name}</span>
-                                    {avg.change && (
-                                        <div
-                                            className={`flex items-center gap-1 text-xs ${avg.change > 0 ? 'text-green-600' : avg.change < 0 ? 'text-red-600' : 'text-muted-foreground'}`}>
-                                            {avg.change > 0 ? <ArrowUpIcon className="h-3 w-3"/> : avg.change < 0 ?
-                                                <ArrowDownIcon className="h-3 w-3"/> : null}
-                                            <span>{Math.abs(avg.change).toFixed(1)} pts</span>
-                                        </div>
-                                    )}
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))}
+                    {averagesData?.teamAverages?.map(avg => {
+                        // Use weekOverWeekChange if available, fallback to change, then null
+                        const changeValue = avg.weekOverWeekChange ?? avg.change ?? null;
+                        const hasChange = changeValue !== null && changeValue !== undefined;
+                        
+                        return (
+                            <Card key={avg.category}
+                                  className={getCardBorderClass(changeValue)}>
+                                <CardContent className="pt-6">
+                                    <div className="flex flex-col items-center gap-1">
+                                        <span className="text-3xl font-bold">{avg.averageRating.toFixed(1)}</span>
+                                        <span className="text-sm font-medium">{CAMPS_CATEGORIES[avg.category].name}</span>
+                                        {hasChange ? (
+                                            <div className={`flex items-center gap-1 text-xs ${getChangeColorClass(changeValue)}`}>
+                                                {changeValue > 0 ? <ArrowUpIcon className="h-3 w-3"/> : 
+                                                 changeValue < 0 ? <ArrowDownIcon className="h-3 w-3"/> : null}
+                                                <span>{formatChangeValue(changeValue, false)}</span>
+                                            </div>
+                                        ) : (
+                                            <div className="text-xs text-muted-foreground">
+                                                No change data
+                                            </div>
+                                        )}
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        );
+                    })}
                 </div>
 
                 {/* Dashboard Tabs */}

@@ -4,21 +4,21 @@ databaseChangeLog:
       author: Eric Hutson
       changes:
         - sqlFile:
-            path: src/main/resources/db/changelog/create_teams.sql
+            path: db/changelog/create_teams.sql
         - sqlFile:
-            path: src/main/resources/db/changelog/create_employees.sql
+            path: db/changelog/create_employees.sql
         - sqlFile:
-            path: src/main/resources/db/changelog/create_engagement_ratings.sql
+            path: db/changelog/create_engagement_ratings.sql
         - sqlFile:
-            path: src/main/resources/db/changelog/create_action_items.sql
+            path: db/changelog/create_action_items.sql
   - changeSet:
       id: analytics-infrastructure
       author: Eric Hutson
       changes:
         - sqlFile:
-            path: src/main/resources/db/changelog/create_trend_data_tables.sql
+            path: db/changelog/create_trend_data_tables.sql
         - sqlFile:
-            path: src/main/resources/db/changelog/create_analytics_processing_table.sql
+            path: db/changelog/create_analytics_processing_table.sql
   - changeSet:
       id: drop-old-trend-data
       author: Eric Hutson
@@ -27,3 +27,9 @@ databaseChangeLog:
             sql: DROP TABLE IF EXISTS trend_data;
         - sql:
             sql: DROP TABLE IF EXISTS team_stats;
+  - changeSet:
+      id: add-version-column
+      author: Eric Hutson
+      changes:
+        - sqlFile:
+            path: db/changelog/add_version_column.sql

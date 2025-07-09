@@ -1,5 +1,6 @@
 package com.acoustic.camps.mapper;
 
+import com.acoustic.camps.codegen.types.EmployeeTrendData;
 import com.acoustic.camps.codegen.types.TrendData;
 import com.acoustic.camps.model.EmployeeTrendDataModel;
 import org.mapstruct.Mapper;
@@ -30,4 +31,20 @@ public interface EmployeeTrendDataMapper {
      * @return List of TrendData DTOs
      */
     List<TrendData> toTrendDataList(List<EmployeeTrendDataModel> trendDataList);
+
+    /**
+     * Convert an EmployeeTrendDataModel entity to an EmployeeTrendData DTO
+     *
+     * @param trendData The model entity
+     * @return The EmployeeTrendData DTO
+     */
+    EmployeeTrendData toEmployeeTrendData(EmployeeTrendDataModel trendData);
+
+    /**
+     * Convert a list of EmployeeTrendDataModel entities to a list of EmployeeTrendData DTOs
+     *
+     * @param trendDataList List of model entities
+     * @return List of EmployeeTrendData DTOs
+     */
+    List<EmployeeTrendData> toEmployeeTrendDataList(List<EmployeeTrendDataModel> trendDataList);
 }

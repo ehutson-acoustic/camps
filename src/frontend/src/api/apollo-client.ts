@@ -3,7 +3,7 @@ import {loggingLink} from "@/api/apollo-logging-link";
 
 // Set up an HTTP link
 const httpLink = new HttpLink({
-    uri: import.meta.env.VITE_GRAPHQL_API_URL ?? 'http://localhost:8080/graphql',
+    uri: import.meta.env.VITE_GRAPHQL_API_URL ?? 'http://localhost:8082/graphql',
 });
 
 // Set up error handling

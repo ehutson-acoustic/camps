@@ -106,7 +106,7 @@ public class EmployeeDataFetcher {
                 .startDate(input.getStartDate())
                 .build();
 
-        if (input.getManagerId() != null) {
+        if (!input.getManagerId().isEmpty()) {
             employeeService.getEmployeeModelById(UUID.fromString(input.getManagerId()))
                     .ifPresent(employeeModel::setManager);
         }

@@ -5,15 +5,17 @@ import {Card, CardContent, CardDescription, CardHeader, CardTitle} from '@/compo
 import {Button} from '@/components/ui/button';
 import {useGetTeams} from '@/api';
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '@/components/ui/select';
-import {Loader2} from 'lucide-react';
+import {Loader2, CheckCircle, AlertCircle} from 'lucide-react';
 import {toast} from 'sonner';
 import {Label} from "recharts";
 
 const RECALCULATE_TRENDS = gql`
-    mutation RecalculateTrends($teamId: ID) {
-        recalculateTrends(teamId: $teamId) {
+    mutation RecalculateWeeklyTrends($teamId: ID) {
+        recalculateWeeklyTrends(teamId: $teamId) {
             success
             message
+            calculatedRecords
+            errors
         }
     }
 `;
@@ -22,21 +24,46 @@ const ALL_TEAMS_VALUE = "all_teams";
 
 const TrendManagement: React.FC = () => {
     const [selectedTeamId, setSelectedTeamId] = useState<string>(ALL_TEAMS_VALUE);
+    const [lastResult, setLastResult] = useState<{success: boolean, message: string, calculatedRecords?: number} | null>(null);
     const {data: teamsData, loading: teamsLoading} = useGetTeams();
 
     const [recalculateTrends, {loading}] = useMutation(RECALCULATE_TRENDS, {
         onCompleted: (data) => {
-            if (data.recalculateTrends.success) {
+            if (data.recalculateWeeklyTrends.success) {
+                let message = data.recalculateWeeklyTrends.message;
+                if (data.recalculateWeeklyTrends.calculatedRecords) {
+                    message += ` (${data.recalculateWeeklyTrends.calculatedRecords} records processed)`;
+                }
+                
+                setLastResult({
+                    success: true,
+                    message: message,
+                    calculatedRecords: data.recalculateWeeklyTrends.calculatedRecords
+                });
+                
                 toast.success("Success", {
-                    description: data.recalculateTrends.message
+                    description: message
                 });
             } else {
+                const errors = data.recalculateWeeklyTrends.errors || [];
+                const errorMessage = errors.length > 0 ? errors.join(", ") : (data.recalculateWeeklyTrends.message ?? "Failed to recalculate trends");
+                
+                setLastResult({
+                    success: false,
+                    message: errorMessage
+                });
+                
                 toast.error("Error", {
-                    description: data.recalculateTrends.message ?? "Failed to recalculate trends"
+                    description: errorMessage
                 });
             }
         },
         onError: (error) => {
+            setLastResult({
+                success: false,
+                message: error.message
+            });
+            
             toast.error("Error", {
                 description: error.message
             });
@@ -44,6 +71,9 @@ const TrendManagement: React.FC = () => {
     });
 
     const handleRecalculate = () => {
+        // Clear previous result
+        setLastResult(null);
+        
         recalculateTrends({
             variables: {
                 teamId: selectedTeamId === ALL_TEAMS_VALUE ? null : selectedTeamId
@@ -93,7 +123,7 @@ const TrendManagement: React.FC = () => {
                             <div className="flex items-end">
                                 <Button
                                     onClick={handleRecalculate}
-                                    disabled={loading}
+                                    disabled={loading || teamsLoading}
                                     className="w-full md:w-auto"
                                 >
                                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
@@ -110,6 +140,36 @@ const TrendManagement: React.FC = () => {
                                 Manual recalculation should only be needed in special circumstances.
                             </p>
                         </div>
+
+                        {loading && (
+                            <div className="rounded-md border border-blue-200 bg-blue-50 p-4">
+                                <div className="flex items-center gap-2">
+                                    <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                                    <span className="text-sm font-medium">Processing</span>
+                                </div>
+                                <p className="mt-1 text-sm text-blue-600">
+                                    Trend calculation is running in the background. This may take a few moments to complete.
+                                </p>
+                            </div>
+                        )}
+
+                        {lastResult && !loading && (
+                            <div className={`rounded-md border p-4 ${lastResult.success ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}`}>
+                                <div className="flex items-center gap-2">
+                                    {lastResult.success ? (
+                                        <CheckCircle className="h-4 w-4 text-green-600" />
+                                    ) : (
+                                        <AlertCircle className="h-4 w-4 text-red-600" />
+                                    )}
+                                    <span className="text-sm font-medium">
+                                        {lastResult.success ? "Success" : "Error"}
+                                    </span>
+                                </div>
+                                <p className={`mt-1 text-sm ${lastResult.success ? "text-green-600" : "text-red-600"}`}>
+                                    {lastResult.message}
+                                </p>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             </div>

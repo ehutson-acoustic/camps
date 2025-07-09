@@ -11,6 +11,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -65,6 +66,9 @@ public class AnalyticsProcessingLogModel {
 
     @Column(name = "completed_at")
     private OffsetDateTime completedAt;
+
+    @Version
+    private Long version;
 
     @PrePersist
     protected void onCreate() {

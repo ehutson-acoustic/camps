@@ -49,6 +49,54 @@ public class WeeklyTrendCalculationService {
     private final AnalyticsProcessingLogRepository processingLogRepository;
 
     /**
+     * Validates that the date range is valid for trend calculation
+     */
+    private void validateDateRange(OffsetDateTime startDate, OffsetDateTime endDate) {
+        if (startDate == null || endDate == null) {
+            throw new IllegalArgumentException("Start date and end date cannot be null");
+        }
+        
+        if (startDate.isAfter(endDate)) {
+            throw new IllegalArgumentException("Start date cannot be after end date");
+        }
+        
+        if (startDate.isAfter(OffsetDateTime.now())) {
+            throw new IllegalArgumentException("Start date cannot be in the future");
+        }
+        
+        // Check that the date range is reasonable (not more than 2 years)
+        if (startDate.isBefore(OffsetDateTime.now().minusYears(2))) {
+            throw new IllegalArgumentException("Date range cannot exceed 2 years");
+        }
+    }
+
+    /**
+     * Validates that the team exists and is not null
+     */
+    private void validateTeam(TeamModel team) {
+        if (team == null) {
+            throw new IllegalArgumentException("Team cannot be null");
+        }
+        
+        if (team.getId() == null) {
+            throw new IllegalArgumentException("Team ID cannot be null");
+        }
+    }
+
+    /**
+     * Validates that the employee exists and is not null
+     */
+    private void validateEmployee(EmployeeModel employee) {
+        if (employee == null) {
+            throw new IllegalArgumentException("Employee cannot be null");
+        }
+        
+        if (employee.getId() == null) {
+            throw new IllegalArgumentException("Employee ID cannot be null");
+        }
+    }
+
+    /**
      * Weekly scheduled task to calculate trend data for all teams and employees
      * Runs at 1 AM every Monday
      */
@@ -129,6 +177,13 @@ public class WeeklyTrendCalculationService {
      */
     @Transactional
     public boolean calculateWeeklyTrendsForPeriod(OffsetDateTime startDate, OffsetDateTime endDate) {
+        try {
+            validateDateRange(startDate, endDate);
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid date range for trend calculation: {}", e.getMessage());
+            return false;
+        }
+        
         String weekIdentifier = startDate.toLocalDate() + " to " + endDate.toLocalDate();
         log.info("Calculating weekly trends for period: {}", weekIdentifier);
 
@@ -143,7 +198,6 @@ public class WeeklyTrendCalculationService {
 
         // Create processing log entry
         AnalyticsProcessingLogModel processingLog = AnalyticsProcessingLogModel.builder()
-                .id(UUID.randomUUID())
                 .snapshotType(SnapshotType.WEEKLY)
                 .processingDate(OffsetDateTime.now())
                 .startDate(startDate)
@@ -151,7 +205,13 @@ public class WeeklyTrendCalculationService {
                 .status(ProcessingStatus.PENDING)
                 .build();
 
-        processingLogRepository.save(processingLog);
+        try {
+            processingLogRepository.save(processingLog);
+            log.debug("Created processing log for weekly trends with ID: {}", processingLog.getId());
+        } catch (Exception e) {
+            log.error("Failed to create processing log for weekly trends: {}", e.getMessage(), e);
+            return false;
+        }
 
         try {
             // Calculate team-level trends
@@ -170,6 +230,7 @@ public class WeeklyTrendCalculationService {
             processingLog.setStatus(ProcessingStatus.COMPLETED);
             processingLog.setCompletedAt(OffsetDateTime.now());
             processingLogRepository.save(processingLog);
+            log.debug("Updated processing log to COMPLETED status");
 
             log.info("Weekly trend calculation completed successfully for period: {}", weekIdentifier);
             return true;
@@ -179,7 +240,11 @@ public class WeeklyTrendCalculationService {
             // Update processing log
             processingLog.setStatus(ProcessingStatus.FAILED);
             processingLog.setErrorMessage(e.getMessage());
-            processingLogRepository.save(processingLog);
+            try {
+                processingLogRepository.save(processingLog);
+            } catch (Exception e1) {
+                log.error("Failed to update processing log for weekly trends: {}", e1.getMessage(), e1);
+            }
 
             return false;
         }
@@ -189,6 +254,14 @@ public class WeeklyTrendCalculationService {
      * Calculate weekly trends for a specific team
      */
     private void calculateTeamWeeklyTrends(TeamModel team, OffsetDateTime startDate, OffsetDateTime endDate) {
+        try {
+            validateTeam(team);
+            validateDateRange(startDate, endDate);
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid parameters for team trend calculation: {}", e.getMessage());
+            return;
+        }
+        
         log.debug("Calculating weekly trends for team: {}", team.getName());
 
         // Calculate for each CAMPS category
@@ -216,20 +289,25 @@ public class WeeklyTrendCalculationService {
                     .findByTeamAndCategoryAndRecordDateBetweenOrderByRecordDateAsc(
                             team, category, previousWeekStart, previousWeekEnd)
                     .stream()
-                    .findFirst();
+                    .reduce((first, second) -> second); // Get the last (most recent) record
 
-            // Get previous month data
-            OffsetDateTime previousMonthDate = endDate.minusMonths(1);
+            // Get previous month data - look for data from approximately 4 weeks ago
+            OffsetDateTime previousMonthEnd = endDate.minusWeeks(4);
+            OffsetDateTime previousMonthStart = previousMonthEnd.minusDays(6);
             Optional<TeamTrendDataModel> previousMonthData = teamTrendDataRepository
-                    .findTopByTeamAndCategoryOrderByRecordDateDesc(team, category);
+                    .findByTeamAndCategoryAndRecordDateBetweenOrderByRecordDateAsc(
+                            team, category, previousMonthStart, previousMonthEnd)
+                    .stream()
+                    .reduce((first, second) -> second);
 
-            // Get previous quarter data
-            OffsetDateTime previousQuarterDate = endDate.minusMonths(3);
+            // Get previous quarter data - look for data from approximately 13 weeks ago
+            OffsetDateTime previousQuarterEnd = endDate.minusWeeks(13);
+            OffsetDateTime previousQuarterStart = previousQuarterEnd.minusDays(6);
             Optional<TeamTrendDataModel> previousQuarterData = teamTrendDataRepository
                     .findByTeamAndCategoryAndRecordDateBetweenOrderByRecordDateAsc(
-                            team, category, previousQuarterDate.minusDays(7), previousQuarterDate)
+                            team, category, previousQuarterStart, previousQuarterEnd)
                     .stream()
-                    .findFirst();
+                    .reduce((first, second) -> second);
 
             // Calculate changes
             Double previousWeekAvg = previousWeekData.map(TeamTrendDataModel::getAverageRating).orElse(null);
@@ -243,7 +321,6 @@ public class WeeklyTrendCalculationService {
 
             // Save trend data
             TeamTrendDataModel trendData = TeamTrendDataModel.builder()
-                    .id(UUID.randomUUID())
                     .team(team)
                     .recordDate(endDate)
                     .category(category)
@@ -270,6 +347,14 @@ public class WeeklyTrendCalculationService {
      * Calculate weekly trends for a specific employee
      */
     private void calculateEmployeeWeeklyTrends(EmployeeModel employee, OffsetDateTime startDate, OffsetDateTime endDate) {
+        try {
+            validateEmployee(employee);
+            validateDateRange(startDate, endDate);
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid parameters for employee trend calculation: {}", e.getMessage());
+            return;
+        }
+        
         log.debug("Calculating weekly trends for employee: {}", employee.getName());
 
         // Calculate for each CAMPS category
@@ -297,20 +382,25 @@ public class WeeklyTrendCalculationService {
                     .findByEmployeeAndCategoryAndRecordDateBetweenOrderByRecordDateAsc(
                             employee, category, previousWeekStart, previousWeekEnd)
                     .stream()
-                    .findFirst();
+                    .reduce((first, second) -> second); // Get the last (most recent) record
 
-            // Get previous month data
-            OffsetDateTime previousMonthDate = endDate.minusMonths(1);
+            // Get previous month data - look for data from approximately 4 weeks ago
+            OffsetDateTime previousMonthEnd = endDate.minusWeeks(4);
+            OffsetDateTime previousMonthStart = previousMonthEnd.minusDays(6);
             Optional<EmployeeTrendDataModel> previousMonthData = employeeTrendDataRepository
-                    .findTopByEmployeeAndCategoryOrderByRecordDateDesc(employee, category);
+                    .findByEmployeeAndCategoryAndRecordDateBetweenOrderByRecordDateAsc(
+                            employee, category, previousMonthStart, previousMonthEnd)
+                    .stream()
+                    .reduce((first, second) -> second);
 
-            // Get previous quarter data
-            OffsetDateTime previousQuarterDate = endDate.minusMonths(3);
+            // Get previous quarter data - look for data from approximately 13 weeks ago
+            OffsetDateTime previousQuarterEnd = endDate.minusWeeks(13);
+            OffsetDateTime previousQuarterStart = previousQuarterEnd.minusDays(6);
             Optional<EmployeeTrendDataModel> previousQuarterData = employeeTrendDataRepository
                     .findByEmployeeAndCategoryAndRecordDateBetweenOrderByRecordDateAsc(
-                            employee, category, previousQuarterDate.minusDays(7), previousQuarterDate)
+                            employee, category, previousQuarterStart, previousQuarterEnd)
                     .stream()
-                    .findFirst();
+                    .reduce((first, second) -> second);
 
             // Calculate changes
             Double previousWeekRating = previousWeekData.map(EmployeeTrendDataModel::getRating).orElse(null);
@@ -324,7 +414,6 @@ public class WeeklyTrendCalculationService {
 
             // Save trend data
             EmployeeTrendDataModel trendData = EmployeeTrendDataModel.builder()
-                    .id(UUID.randomUUID())
                     .employee(employee)
                     .team(employee.getTeam())
                     .recordDate(endDate)

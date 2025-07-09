@@ -2,6 +2,7 @@ package com.acoustic.camps.service;
 
 import com.acoustic.camps.codegen.types.CampsCategory;
 import com.acoustic.camps.codegen.types.CategoryAverage;
+import com.acoustic.camps.codegen.types.StatisticalContext;
 import com.acoustic.camps.codegen.types.Team;
 import com.acoustic.camps.codegen.types.TeamStats;
 import com.acoustic.camps.codegen.types.TrendData;
@@ -70,6 +71,7 @@ public class AnalyticsService {
             CategoryAverage avg = new CategoryAverage();
             avg.setCategory(category);
             avg.setAverageRating(0.0);
+            avg.setStatisticalContext(createBasicStatisticalContext(0));
             averagesByCategory.put(category, avg);
         }
 
@@ -78,11 +80,14 @@ public class AnalyticsService {
             CampsCategory category = CampsCategory.valueOf((String) row[0]);
             double currentAvg = row[1] != null ? ((Number) row[1]).doubleValue() : 0.0;
             Double previousAvg = row[2] != null ? ((Number) row[2]).doubleValue() : null;
+            Integer sampleSize = row.length > 3 && row[3] != null ? ((Number) row[3]).intValue() : 1;
 
             CategoryAverage avg = averagesByCategory.get(category);
             avg.setAverageRating(currentAvg);
             avg.setPreviousAverageRating(previousAvg);
             avg.setChange(previousAvg != null ? currentAvg - previousAvg : null);
+            avg.setWeekOverWeekChange(previousAvg != null ? currentAvg - previousAvg : null);
+            avg.setStatisticalContext(createBasicStatisticalContext(sampleSize));
         }
 
         return new ArrayList<>(averagesByCategory.values());
@@ -244,6 +249,14 @@ public class AnalyticsService {
                 .map(TeamStatsModel::getAverageRating)
                 .orElse(null);
 
+        // Get previous week data for week-over-week calculation
+        OffsetDateTime previousWeek = currentMonth.minusWeeks(1);
+        Double prevWeekAvg = teamStatsRepository
+                .findTopByTeamAndCategoryAndRecordDateLessThanEqualOrderByRecordDateDesc(
+                        team, category, previousWeek.plusDays(7).minusDays(1))
+                .map(TeamStatsModel::getAverageRating)
+                .orElse(null);
+
         // Create and save trend data entity
         TeamTrendDataModel trendDataModel = TeamTrendDataModel.builder()
                 .team(team)
@@ -251,6 +264,7 @@ public class AnalyticsService {
                 .category(category)
                 .averageRating(currentAvg)
                 .previousAverageRating(prevMonthAvg)
+                .weekOverWeekChange(calculateChange(currentAvg, prevWeekAvg))
                 .monthOverMonthChange(calculateChange(currentAvg, prevMonthAvg))
                 .quarterOverQuarterChange(calculateChange(currentAvg, prevQuarterAvg))
                 .yearOverYearChange(calculateChange(currentAvg, prevYearAvg))
@@ -335,5 +349,22 @@ public class AnalyticsService {
     private TeamModel getTeamModel(UUID teamId) {
         return teamRepository.findById(teamId)
                 .orElseThrow(() -> new IllegalArgumentException("Team not found"));
+    }
+
+    /**
+     * Creates a basic StatisticalContext for category averages
+     */
+    private StatisticalContext createBasicStatisticalContext(Integer sampleSize) {
+        StatisticalContext context = new StatisticalContext();
+        context.setSampleSize(sampleSize != null ? sampleSize : 0);
+        context.setIsStatisticallySignificant(sampleSize != null && sampleSize > 1);
+        
+        // Set basic defaults for optional fields
+        context.setStandardDeviation(null);
+        context.setVariance(null);
+        context.setConfidenceInterval(null);
+        context.setSignificanceLevel(sampleSize != null && sampleSize > 1 ? 0.05 : null);
+        
+        return context;
     }
 }
